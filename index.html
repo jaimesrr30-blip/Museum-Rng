@@ -212,6 +212,25 @@ h2.section-title{
 @keyframes pityGlow{0%,100%{filter:brightness(1);}50%{filter:brightness(1.4);}}
 .pity-label{text-align:center;font-size:.72rem;color:var(--text-2);margin-top:6px;}
 
+/* ---------- excavación ---------- */
+.dig-site-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:18px;}
+.dig-site{
+  width:180px;height:140px;border-radius:16px;position:relative;
+  background:linear-gradient(160deg,#5a4128,#2e2013);
+  border:2px solid #6b4a2a;box-shadow:inset 0 0 30px rgba(0,0,0,.5),0 8px 20px rgba(0,0,0,.4);
+  display:flex;align-items:center;justify-content:center;font-size:3.6rem;
+  user-select:none;
+}
+.dig-site.hit{animation:digHit .18s ease;}
+@keyframes digHit{0%{transform:scale(1) rotate(0);}40%{transform:scale(.93) rotate(-3deg);}100%{transform:scale(1) rotate(0);}}
+.dig-site.breaking{animation:digBreak .42s ease forwards;}
+@keyframes digBreak{to{transform:scale(.15) rotate(12deg);opacity:0;}}
+.dig-bar-wrap{width:100%;max-width:320px;}
+.dig-bar{height:10px;border-radius:6px;background:var(--panel-light);overflow:hidden;border:1px solid var(--border);}
+.dig-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,#c2884b,var(--gold));transition:width .25s ease;}
+.dig-btn{padding:16px 46px;font-size:1.15rem;background:linear-gradient(135deg,#a9662f,#d99048,#a9662f);background-size:220% 220%;}
+.energy-wrap{width:100%;max-width:320px;}
+
 /* ---------- shake / screen effects ---------- */
 .shake{animation:shakeAnim .4s ease;}
 .shake-strong{animation:shakeStrongAnim .7s ease;}
@@ -459,6 +478,7 @@ footer.foot{text-align:center;color:var(--text-2);font-size:.72rem;margin-top:30
     <button class="icon-btn" id="soundToggle" title="Sonido">🔊</button>
     <nav class="tabs" id="tabs">
       <button class="tab-btn active" data-tab="roll">🎰 Tirar</button>
+      <button class="tab-btn" data-tab="dig">⛏️ Excavar</button>
       <button class="tab-btn" data-tab="museum">🏛️ Museo</button>
       <button class="tab-btn" data-tab="shop">🛒 Tienda</button>
       <button class="tab-btn" data-tab="collection">📖 Colección</button>
@@ -491,6 +511,28 @@ footer.foot{text-align:center;color:var(--text-2);font-size:.72rem;margin-top:30
         </div>
         <div class="equipped-bar" id="equippedBar"></div>
         <div class="recent-pulls" id="recentPulls"></div>
+      </div>
+    </section>
+
+    <!-- DIG VIEW -->
+    <section class="view" id="view-dig">
+      <div class="panel">
+        <h2 class="section-title">⛏️ Excavación</h2>
+        <p class="subtle" style="margin-top:-8px;margin-bottom:16px;">Cava para encontrar objetos con probabilidades mucho más generosas que la tirada. Gasta energía, no monedas — y se regenera sola.</p>
+        <div id="pickaxeInfo"></div>
+        <div class="dig-site-wrap">
+          <div class="dig-site" id="digSite">🪨</div>
+          <div class="dig-bar-wrap">
+            <div class="dig-bar"><div class="dig-bar-fill" id="digBarFill"></div></div>
+            <div class="subtle" id="digProgressLabel" style="text-align:center;margin-top:4px;">Dureza: 5/5</div>
+          </div>
+          <button class="roll-btn dig-btn" id="digBtn">⛏️ CAVAR</button>
+          <div class="energy-wrap">
+            <div class="pity-bar"><div class="pity-bar-fill" id="energyBarFill" style="background:linear-gradient(90deg,#38bdf8,#4ade80);"></div></div>
+            <div class="pity-label" id="energyLabel">Energía: 10/10</div>
+          </div>
+        </div>
+        <div class="upg-card" id="pickaxeUpgradeCard" style="margin-top:18px;"></div>
       </div>
     </section>
 
@@ -678,7 +720,15 @@ const EVENT_ITEMS = [
   {id:"evt_tormenta", name:"Núcleo de Tormenta",    icon:"🌩️", rarity:7, denom:1200, cps:150, room:5, event:true},
   {id:"evt_arcoiris", name:"Cristal Arcoíris",      icon:"🌈", rarity:5, denom:280,  cps:40,  room:5, event:true},
 ];
-const ALL_ITEMS = ITEMS.concat(EVENT_ITEMS);
+const EXCAVATION_ITEMS = [
+  {id:"bolsa_monedas", name:"Bolsa de Monedas Antiguas", icon:"💰", rarity:0, denom:2,  cps:3,  room:6, dig:true},
+  {id:"llave_oxidada", name:"Llave Oxidada",             icon:"🔑", rarity:1, denom:4,  cps:5,  room:6, dig:true},
+  {id:"amuleto_ojo",   name:"Amuleto del Ojo Turco",     icon:"🧿", rarity:1, denom:5,  cps:6,  room:6, dig:true},
+  {id:"urna_funeraria",name:"Urna Funeraria",            icon:"⚱️", rarity:2, denom:10, cps:12, room:6, dig:true},
+  {id:"campana_templo",name:"Campana de Templo",         icon:"🔔", rarity:2, denom:14, cps:14, room:6, dig:true},
+  {id:"brujula_perdida",name:"Brújula Perdida",          icon:"🧭", rarity:3, denom:25, cps:22, room:6, dig:true},
+];
+const ALL_ITEMS = ITEMS.concat(EVENT_ITEMS).concat(EXCAVATION_ITEMS);
 const ITEM_MAP = Object.fromEntries(ALL_ITEMS.map(it=>[it.id,it]));
 
 const ROOMS = [
@@ -688,7 +738,25 @@ const ROOMS = [
   {name:"Sala Cósmica",            icon:"🌌"},
   {name:"Cámara Secreta",          icon:"🔒"},
   {name:"Sala de Eventos",         icon:"🎪"},
+  {name:"Sala de Excavación",      icon:"⛏️"},
 ];
+
+/* --- minijuego de excavación --- */
+const PICKAXE_LEVELS = [
+  {name:"Pico de Madera",   icon:"🪵", power:1,  maxEnergy:10, regenSec:5,   cost:0},
+  {name:"Pico de Piedra",   icon:"🪨", power:2,  maxEnergy:12, regenSec:4.5, cost:80},
+  {name:"Pico de Bronce",   icon:"🔶", power:3,  maxEnergy:14, regenSec:4,   cost:250},
+  {name:"Pico de Hierro",   icon:"⚙️", power:4,  maxEnergy:16, regenSec:3.5, cost:700},
+  {name:"Pico de Plata",    icon:"🥈", power:6,  maxEnergy:18, regenSec:3,   cost:1800},
+  {name:"Pico de Oro",      icon:"🥇", power:9,  maxEnergy:20, regenSec:2.5, cost:4500},
+  {name:"Pico de Diamante", icon:"💎", power:13, maxEnergy:24, regenSec:2,   cost:12000},
+  {name:"Pico Rúnico",      icon:"✨", power:19, maxEnergy:28, regenSec:1.6, cost:35000},
+  {name:"Pico Celestial",   icon:"🌠", power:28, maxEnergy:32, regenSec:1.3, cost:100000},
+  {name:"Pico Legendario",  icon:"👑", power:42, maxEnergy:40, regenSec:1,   cost:300000},
+];
+function currentPickaxe(){ return PICKAXE_LEVELS[state.dig.pickLevel]; }
+function randomSiteHardness(){ return 4+Math.floor(Math.random()*4); }
+function digComplete(s){ return EXCAVATION_ITEMS.every(i=>s.items[i.id]); }
 
 /* --- evento rotativo diario --- */
 function todayIndex(){ return Math.floor(Date.now()/86400000); }
@@ -725,6 +793,9 @@ const ACHIEVEMENTS = [
   {id:"rolls_10000",  name:"Leyenda del Azar",     icon:"🎲", desc:"Realiza 10.000 tiradas.", reward:20000, cond:s=>s.stats.totalRolls>=10000},
   {id:"first_upgrade",name:"Primera Mejora",       icon:"🔧", desc:"Compra tu primera mejora en la tienda.", reward:50, cond:s=>Object.values(s.upgrades).some(l=>l>0)},
   {id:"max_upgrade",  name:"Al Límite",            icon:"🏅", desc:"Sube una mejora a su nivel máximo.", reward:800, cond:s=>Object.keys(UPGRADES).some(k=>s.upgrades[k]>=UPGRADES[k].max)},
+  {id:"first_dig",    name:"Primera Excavación",   icon:"⛏️", desc:"Completa tu primera excavación.", reward:30, cond:s=>(s.dig&&s.dig.totalDigs||0)>=1},
+  {id:"dig_master",   name:"Maestro Excavador",    icon:"🏺", desc:"Descubre los 6 objetos de la Sala de Excavación.", reward:500, cond:s=>digComplete(s)},
+  {id:"pickaxe_max",  name:"Pico Legendario",      icon:"👑", desc:"Mejora tu pico al nivel máximo.", reward:2000, cond:s=>(s.dig&&s.dig.pickLevel||0)>=PICKAXE_LEVELS.length-1},
 ];
 
 function roomComplete(state, roomIdx){
@@ -741,6 +812,7 @@ const MISSION_POOL = [
   {id:"rare",    icon:"✨", label:t=>`Consigue ${t} objeto${t>1?"s":""} Raro o superior`, tiers:[1,2,4],   reward:t=>t*90},
   {id:"upgrade", icon:"🔧", label:()=>`Compra una mejora en la tienda`,                tiers:[1],          reward:()=>60},
   {id:"equip",   icon:"⭐", label:()=>`Equipa un objeto en el museo`,                  tiers:[1],          reward:()=>40},
+  {id:"digs",    icon:"⛏️", label:t=>`Completa ${t} excavación${t>1?"es":""}`,         tiers:[3,6,10],     reward:t=>t*30},
 ];
 
 /* =========================================================
@@ -764,6 +836,7 @@ const DEFAULT_STATE = {
   },
   prestige:{points:0, count:0},
   missions:null,     // se genera perezosamente con ensureDailyMissions()
+  dig:{pickLevel:0, energy:10, siteHardness:5, siteMaxHardness:5, totalDigs:0, regenProgress:0},
   soundOn:true,
   createdAt:Date.now(),
   lastActiveAt:Date.now(),
@@ -781,6 +854,7 @@ function loadState(){
       upgrades:Object.assign({},DEFAULT_STATE.upgrades,parsed.upgrades),
       stats:Object.assign({},DEFAULT_STATE.stats,parsed.stats),
       prestige:Object.assign({},DEFAULT_STATE.prestige,parsed.prestige),
+      dig:Object.assign({},DEFAULT_STATE.dig,parsed.dig),
     });
   }catch(e){
     console.warn("Save corrupta, empezando de nuevo.",e);
@@ -827,6 +901,8 @@ function tone(freq,dur,type="sine",gainStart=.18,delay=0){
 }
 function sfxRoll(){ tone(220,.12,"square",.08); tone(330,.1,"square",.06,.05); }
 function sfxBuy(){ tone(500,.1,"triangle",.15); tone(700,.12,"triangle",.12,.06); }
+function sfxDig(){ tone(150,.07,"square",.13); tone(90,.09,"triangle",.11,.02); }
+function sfxDigComplete(){ tone(440,.12,"triangle",.14); tone(587,.14,"triangle",.13,.07); tone(740,.2,"triangle",.12,.14); }
 function sfxAchievement(){ tone(660,.15,"triangle",.16); tone(880,.18,"triangle",.14,.1); tone(1100,.22,"triangle",.12,.2); }
 function sfxResult(rarity){
   if(rarity<=1){ tone(440,.15,"sine",.15); }
@@ -1169,7 +1245,7 @@ function showResultCard(item,isNew,isEpic){
   card.style.setProperty("--rcg",rar.glow);
   card.classList.toggle("epic",!!isEpic);
   document.getElementById("resultIcon").textContent=item.icon;
-  document.getElementById("resultRarity").textContent=rar.name+(item.event?" · Evento":"");
+  document.getElementById("resultRarity").textContent=rar.name+(item.event?" · Evento":"")+(item.dig?" · Excavación":"");
   document.getElementById("resultRarity").style.color=rar.color;
   document.getElementById("resultName").textContent=item.name;
   document.getElementById("resultProb").textContent="🎯 "+fmtDenom(item.denom);
@@ -1212,6 +1288,7 @@ function updateEquippedBar(){
 }
 
 rollBtn.addEventListener("click",doRoll);
+document.getElementById("digBtn").addEventListener("click",doDig);
 
 /* =========================================================
    RENDER: MUSEUM
@@ -1326,6 +1403,112 @@ function buyUpgrade(key){
 }
 
 /* =========================================================
+   MINIJUEGO: EXCAVACIÓN
+   ========================================================= */
+function doDig(){
+  if(state.dig.energy<=0) return;
+  ensureAudio();
+  state.dig.energy--;
+  state.dig.siteHardness-=currentPickaxe().power;
+  sfxDig();
+  const site=document.getElementById("digSite");
+  if(site){
+    site.classList.remove("hit"); void site.offsetWidth; site.classList.add("hit");
+    dustBurst(site);
+  }
+  if(state.dig.siteHardness<=0){
+    completeDig();
+  } else {
+    renderDigPanel();
+    saveState();
+  }
+}
+function completeDig(){
+  const won=pickWeighted(EXCAVATION_ITEMS, EXCAVATION_ITEMS.map(it=>1/it.denom));
+  const isNew=!state.items[won.id];
+  if(!state.items[won.id]) state.items[won.id]={count:0,firstAt:Date.now()};
+  state.items[won.id].count++;
+  state.dig.totalDigs=(state.dig.totalDigs||0)+1;
+  bumpMission("digs",1);
+
+  const site=document.getElementById("digSite");
+  if(site){
+    site.classList.add("breaking");
+    setTimeout(()=>site.classList.remove("breaking"),420);
+  }
+  sfxDigComplete();
+  burstParticles(won.rarity,{count:50});
+
+  state.dig.siteMaxHardness=randomSiteHardness();
+  state.dig.siteHardness=state.dig.siteMaxHardness;
+
+  showResultCard(won,isNew,false);
+  updateEquippedBar();
+  renderTop();
+  checkAchievements();
+  checkMissions();
+  renderDigPanel();
+  renderMuseum();
+  renderCollection();
+  renderStats();
+  saveState();
+}
+function buyPickaxe(){
+  const next=state.dig.pickLevel+1;
+  if(next>=PICKAXE_LEVELS.length) return;
+  const cost=PICKAXE_LEVELS[next].cost;
+  if(state.coins<cost) return;
+  state.coins-=cost;
+  state.stats.coinsSpentTotal+=cost;
+  state.dig.pickLevel=next;
+  ensureAudio(); sfxBuy();
+  toast(`⛏️ ¡Pico mejorado a <b>${PICKAXE_LEVELS[next].name}</b>!`);
+  renderDigPanel();
+  renderTop();
+  checkAchievements();
+  saveState();
+}
+function renderDigPanel(){
+  const pinfo=document.getElementById("pickaxeInfo");
+  if(!pinfo) return;
+  const pick=currentPickaxe();
+  pinfo.innerHTML=`
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-val">${pick.icon} ${pick.name}</div><div class="stat-lab">Pico actual</div></div>
+      <div class="stat-card"><div class="stat-val">${pick.power}</div><div class="stat-lab">⛏️ Potencia por golpe</div></div>
+      <div class="stat-card"><div class="stat-val">${fmt(state.dig.totalDigs||0)}</div><div class="stat-lab">🏺 Excavaciones completadas</div></div>
+    </div>`;
+  const pct=Math.max(0,Math.min(100,Math.round((1-state.dig.siteHardness/state.dig.siteMaxHardness)*100)));
+  const digBar=document.getElementById("digBarFill");
+  if(digBar) digBar.style.width=pct+"%";
+  const label=document.getElementById("digProgressLabel");
+  if(label) label.textContent=`Dureza: ${Math.max(0,state.dig.siteHardness)}/${state.dig.siteMaxHardness}`;
+  const eBar=document.getElementById("energyBarFill");
+  if(eBar) eBar.style.width=Math.round(state.dig.energy/pick.maxEnergy*100)+"%";
+  const eLabel=document.getElementById("energyLabel");
+  if(eLabel) eLabel.textContent=`Energía: ${state.dig.energy}/${pick.maxEnergy} (regenera 1 cada ${pick.regenSec}s)`;
+  const digBtn=document.getElementById("digBtn");
+  if(digBtn) digBtn.disabled=state.dig.energy<=0;
+
+  const upCard=document.getElementById("pickaxeUpgradeCard");
+  if(upCard){
+    const next=PICKAXE_LEVELS[state.dig.pickLevel+1];
+    if(!next){
+      upCard.innerHTML=`<div class="upg-head"><div class="upg-icon">🏆</div><div><div class="upg-name">Pico al nivel máximo</div><div class="upg-level">Ya tienes el mejor pico del museo.</div></div></div>`;
+    } else {
+      upCard.innerHTML=`
+        <div class="upg-head"><div class="upg-icon">${next.icon}</div><div>
+          <div class="upg-name">${next.name}</div>
+          <div class="upg-level">Potencia ${next.power} · Energía máx. ${next.maxEnergy} · Regenera cada ${next.regenSec}s</div>
+        </div></div>
+        <button class="buy-btn" id="pickaxeBuyBtn" ${state.coins<next.cost?"disabled":""}>Mejorar Pico · 🪙 ${fmt(next.cost)}</button>`;
+      const b=document.getElementById("pickaxeBuyBtn");
+      if(b) b.addEventListener("click",buyPickaxe);
+    }
+  }
+}
+
+/* =========================================================
    RENDER: COLLECTION
    ========================================================= */
 function renderCollection(){
@@ -1425,7 +1608,7 @@ function ensureDailyMissions(){
       const target=tpl.tiers[Math.floor(Math.random()*tpl.tiers.length)];
       return {id:tpl.id, target, reward:tpl.reward(target), claimed:false};
     });
-    state.missions={date:todayStr(), list, progress:{rolls:0,coins:0,rare:0,upgrade:0,equip:0}};
+    state.missions={date:todayStr(), list, progress:{rolls:0,coins:0,rare:0,upgrade:0,equip:0,digs:0}};
   }
 }
 function bumpMission(type, amount){
@@ -1536,9 +1719,9 @@ const pCtx=pCanvas.getContext("2d");
 function resizeCanvas(){ pCanvas.width=window.innerWidth; pCanvas.height=window.innerHeight; }
 window.addEventListener("resize",resizeCanvas); resizeCanvas();
 let particles=[];
-function burstParticles(rarity){
+function burstParticles(rarity,opts){
   const rar=RARITIES[rarity];
-  const count = rarity>=8 ? 140 : rarity>=6 ? 80 : 40;
+  const count = (opts&&opts.count) || (rarity>=8 ? 140 : rarity>=6 ? 80 : 40);
   const cx=pCanvas.width/2, cy=pCanvas.height*0.4;
   for(let i=0;i<count;i++){
     const ang=Math.random()*Math.PI*2;
@@ -1547,6 +1730,19 @@ function burstParticles(rarity){
       x:cx,y:cy,
       vx:Math.cos(ang)*speed, vy:Math.sin(ang)*speed-2,
       life:1, color:rar.color, size:3+Math.random()*4,
+    });
+  }
+}
+function dustBurst(el){
+  const r=el.getBoundingClientRect();
+  const cx=r.left+r.width/2, cy=r.top+r.height/2;
+  for(let i=0;i<10;i++){
+    const ang=Math.random()*Math.PI*2;
+    const speed=1+Math.random()*3;
+    particles.push({
+      x:cx,y:cy,
+      vx:Math.cos(ang)*speed, vy:Math.sin(ang)*speed-1,
+      life:1, color:"#9c8264", size:2+Math.random()*3,
     });
   }
 }
@@ -1658,6 +1854,17 @@ setInterval(()=>{
     bumpMission("coins",income);
   }
   state.stats.playTimeSeconds++;
+
+  const pick=currentPickaxe();
+  state.dig.regenProgress=(state.dig.regenProgress||0)+1;
+  if(state.dig.regenProgress>=pick.regenSec){
+    state.dig.regenProgress-=pick.regenSec;
+    if(state.dig.energy<pick.maxEnergy){
+      state.dig.energy++;
+      renderDigPanel();
+    }
+  }
+
   renderTop();
   updateRollButton();
   const minuteMark=Math.floor(state.stats.playTimeSeconds/30);
@@ -1705,6 +1912,7 @@ function fullRender(){
   renderPrestige();
   renderPityBar();
   renderEventBanner();
+  renderDigPanel();
   buildReel(ITEMS[0]);
 }
 pendingOfflineReport = computeOfflineEarnings();

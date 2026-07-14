@@ -68,26 +68,42 @@ body{
 .brand span:first-child{-webkit-text-fill-color:initial;}
 .resources{display:flex;gap:10px;margin-left:auto;}
 .coin-display,.cps-display{
-  display:flex;align-items:center;gap:6px;font-weight:700;font-variant-numeric:tabular-nums;
+  display:flex;align-items:center;gap:6px;font-weight:800;font-variant-numeric:tabular-nums;
   padding:7px 12px;border-radius:999px;background:var(--panel-light);border:1px solid var(--border);
-  font-size:.92rem;
+  font-size:.92rem;transition:box-shadow .2s ease;
 }
-.coin-display{color:var(--gold);}
-.cps-display{color:var(--good);}
+.coin-display{color:var(--gold);text-shadow:0 0 10px rgba(243,198,92,.6);box-shadow:0 0 12px -4px rgba(243,198,92,.4) inset;}
+.cps-display{color:var(--good);text-shadow:0 0 10px rgba(74,222,128,.6);box-shadow:0 0 12px -4px rgba(74,222,128,.4) inset;}
 .tabs{display:flex;gap:6px;flex-wrap:wrap;order:5;width:100%;}
 .tab-btn{
+  position:relative;overflow:hidden;
   background:transparent;border:1px solid transparent;color:var(--text-1);
-  padding:8px 12px;border-radius:10px;cursor:pointer;font-size:.85rem;font-weight:600;
-  transition:all .18s ease;white-space:nowrap;
+  padding:8px 14px;border-radius:10px;cursor:pointer;font-size:.85rem;font-weight:700;
+  transition:color .18s ease,border-color .18s ease,box-shadow .2s ease,transform .15s ease,background .18s ease;
+  white-space:nowrap;
 }
-.tab-btn:hover{background:var(--panel-light);color:var(--text-0);}
-.tab-btn.active{background:linear-gradient(135deg,rgba(124,157,255,.25),rgba(192,132,252,.2));color:var(--text-0);border-color:var(--border-strong);}
+.tab-btn::before{
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,.16) 50%,transparent 70%);
+  transform:translateX(-140%);transition:transform .55s ease;
+}
+.tab-btn:hover::before{transform:translateX(140%);}
+.tab-btn:hover{background:var(--panel-light);color:var(--text-0);border-color:var(--border);transform:translateY(-1px);}
+.tab-btn.active{
+  background:linear-gradient(135deg,rgba(124,157,255,.3),rgba(192,132,252,.26));
+  color:#fdfeff;border-color:rgba(124,157,255,.55);
+  box-shadow:0 0 18px -2px rgba(124,157,255,.6), inset 0 0 14px rgba(124,157,255,.12);
+  text-shadow:0 0 10px rgba(124,157,255,.85);
+}
 .icon-btn{
+  position:relative;overflow:hidden;
   background:var(--panel-light);border:1px solid var(--border);color:var(--text-0);
   width:38px;height:38px;border-radius:10px;cursor:pointer;font-size:1rem;
-  display:flex;align-items:center;justify-content:center;transition:.15s;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
-.icon-btn:hover{border-color:var(--border-strong);transform:translateY(-1px);}
+.icon-btn:hover{border-color:var(--accent);color:#fff;transform:translateY(-2px) scale(1.05);box-shadow:0 0 16px -2px rgba(124,157,255,.65);}
+.icon-btn:active{transform:translateY(0) scale(.96);}
 
 main{margin-top:16px;}
 .view{display:none;animation:fadeIn .35s ease;}
@@ -98,7 +114,11 @@ main{margin-top:16px;}
   background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
   padding:18px;backdrop-filter:blur(14px);box-shadow:0 10px 30px rgba(0,0,0,.28);
 }
-h2.section-title{margin:0 0 14px;font-size:1.05rem;color:var(--text-0);display:flex;align-items:center;gap:8px;}
+h2.section-title{
+  margin:0 0 16px;font-size:1.1rem;font-weight:800;letter-spacing:.4px;
+  color:var(--text-0);display:flex;align-items:center;gap:8px;
+  text-shadow:0 0 16px rgba(124,157,255,.5),0 0 3px rgba(124,157,255,.7);
+}
 .subtle{color:var(--text-1);font-size:.85rem;}
 
 /* ---------- roll view ---------- */
@@ -132,15 +152,26 @@ h2.section-title{margin:0 0 14px;font-size:1.05rem;color:var(--text-0);display:f
 .roll-controls{display:flex;flex-direction:column;align-items:center;gap:8px;}
 .roll-btn{
   position:relative;overflow:hidden;
-  padding:20px 60px;font-size:1.35rem;font-weight:800;letter-spacing:1px;color:#0a0a12;
-  background:linear-gradient(135deg,var(--gold),#ffdf8a);
+  padding:20px 60px;font-size:1.4rem;font-weight:900;letter-spacing:1.5px;color:#0a0a12;
+  background:linear-gradient(135deg,var(--gold),#ffdf8a,var(--gold));background-size:220% 220%;
   border:none;border-radius:18px;cursor:pointer;
-  box-shadow:0 10px 30px rgba(243,198,92,.35),0 0 0 1px rgba(255,255,255,.2) inset;
-  transition:transform .12s ease, box-shadow .12s ease;
+  box-shadow:0 10px 30px rgba(243,198,92,.4),0 0 0 1px rgba(255,255,255,.25) inset,0 0 22px rgba(243,198,92,.3);
+  transition:transform .12s ease, box-shadow .2s ease, background-position .5s ease;
+  animation:rollIdleGlow 2.6s ease-in-out infinite;
 }
-.roll-btn:hover:not(:disabled){transform:translateY(-2px) scale(1.02);box-shadow:0 14px 36px rgba(243,198,92,.5);}
+@keyframes rollIdleGlow{
+  0%,100%{box-shadow:0 10px 30px rgba(243,198,92,.4),0 0 0 1px rgba(255,255,255,.25) inset,0 0 20px rgba(243,198,92,.3);}
+  50%{box-shadow:0 10px 34px rgba(243,198,92,.6),0 0 0 1px rgba(255,255,255,.32) inset,0 0 38px rgba(243,198,92,.55);}
+}
+.roll-btn::after{
+  content:"";position:absolute;top:0;left:-60%;width:35%;height:100%;
+  background:linear-gradient(120deg,transparent,rgba(255,255,255,.6),transparent);
+  transform:skewX(-20deg);transition:left .65s ease;pointer-events:none;
+}
+.roll-btn:hover:not(:disabled)::after{left:130%;}
+.roll-btn:hover:not(:disabled){transform:translateY(-2px) scale(1.03);background-position:100% 50%;}
 .roll-btn:active:not(:disabled){transform:translateY(1px) scale(.98);}
-.roll-btn:disabled{opacity:.4;cursor:not-allowed;filter:grayscale(.4);}
+.roll-btn:disabled{opacity:.4;cursor:not-allowed;filter:grayscale(.4);animation:none;}
 .roll-btn small{display:block;font-size:.65rem;font-weight:700;opacity:.75;margin-top:3px;letter-spacing:.5px;}
 .roll-hint{color:var(--text-2);font-size:.78rem;}
 
@@ -148,16 +179,18 @@ h2.section-title{margin:0 0 14px;font-size:1.05rem;color:var(--text-0);display:f
 .equip-slot{
   width:64px;height:64px;border-radius:12px;border:1.5px dashed var(--border-strong);
   display:flex;align-items:center;justify-content:center;font-size:1.6rem;background:var(--panel-light);
-  position:relative;
+  position:relative;transition:transform .18s ease, box-shadow .18s ease;
 }
-.equip-slot.filled{border-style:solid;}
-.equip-slot .mini-cps{position:absolute;bottom:-18px;font-size:.6rem;color:var(--good);white-space:nowrap;}
+.equip-slot:hover{transform:translateY(-2px);box-shadow:0 0 16px -4px rgba(124,157,255,.5);}
+.equip-slot.filled{border-style:solid;box-shadow:0 0 14px -4px rgba(124,157,255,.4);}
+.equip-slot .mini-cps{position:absolute;bottom:-18px;font-size:.6rem;color:var(--good);white-space:nowrap;text-shadow:0 0 8px rgba(74,222,128,.6);}
 
 .recent-pulls{display:flex;gap:6px;flex-wrap:wrap;margin-top:26px;justify-content:center;}
 .recent-chip{
   font-size:1.15rem;width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;
-  background:var(--panel-light);border:1px solid var(--border);
+  background:var(--panel-light);border:1px solid var(--border);transition:transform .15s ease, box-shadow .15s ease;
 }
+.recent-chip:hover{transform:translateY(-3px) scale(1.1);}
 
 /* ---------- shake / screen effects ---------- */
 .shake{animation:shakeAnim .4s ease;}
@@ -188,55 +221,96 @@ h2.section-title{margin:0 0 14px;font-size:1.05rem;color:var(--text-0);display:f
 @keyframes resultPop{from{transform:scale(.6);opacity:0;}to{transform:scale(1);opacity:1;}}
 .result-icon{font-size:4rem;margin-bottom:8px;filter:drop-shadow(0 0 18px var(--rcg,var(--r0g)));animation:iconFloat 2s ease-in-out infinite;}
 @keyframes iconFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
-.result-rarity{font-weight:800;letter-spacing:1.5px;text-transform:uppercase;font-size:.78rem;color:var(--rc,var(--r0));margin-bottom:4px;}
-.result-name{font-size:1.3rem;font-weight:800;margin-bottom:10px;}
+.result-rarity{font-weight:800;letter-spacing:1.5px;text-transform:uppercase;font-size:.78rem;color:var(--rc,var(--r0));margin-bottom:4px;text-shadow:0 0 14px currentColor;}
+.result-name{font-size:1.3rem;font-weight:800;margin-bottom:10px;text-shadow:0 0 18px var(--rcg,transparent);}
 .result-meta{display:flex;justify-content:center;gap:14px;color:var(--text-1);font-size:.8rem;margin-bottom:16px;}
 .result-new-badge{display:inline-block;background:linear-gradient(90deg,var(--good),#22c55e);color:#04150b;font-weight:800;font-size:.7rem;padding:3px 10px;border-radius:999px;margin-bottom:10px;}
 .result-close{
   margin-top:6px;padding:9px 26px;border-radius:10px;border:1px solid var(--border-strong);
   background:var(--panel-light);color:var(--text-0);cursor:pointer;font-weight:700;
+  transition:transform .15s ease, box-shadow .2s ease, border-color .15s ease;
 }
+.result-close:hover{border-color:var(--rc,var(--accent));box-shadow:0 0 18px -2px var(--rcg,rgba(124,157,255,.55));transform:translateY(-2px);}
+.result-close:active{transform:translateY(0);}
 
 /* ---------- museum ---------- */
 .rooms{display:flex;flex-direction:column;gap:18px;}
 .room{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
 .room-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
-.room-title{font-weight:700;display:flex;align-items:center;gap:8px;}
+.room-title{font-weight:800;letter-spacing:.3px;display:flex;align-items:center;gap:8px;text-shadow:0 0 12px rgba(124,157,255,.4);}
 .room-progress{font-size:.78rem;color:var(--text-1);}
 .room-bar{height:6px;border-radius:4px;background:var(--panel-light);overflow:hidden;margin-top:6px;}
 .room-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .5s ease;}
 .item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;}
 .item-card{
   border-radius:14px;padding:12px 10px;text-align:center;cursor:pointer;position:relative;
-  background:var(--panel-light);border:1.5px solid var(--border);transition:transform .15s ease, box-shadow .15s ease;
+  background:var(--panel-light);border:2px solid var(--border);
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
   user-select:none;
 }
-.item-card:hover{transform:translateY(-3px);}
-.item-card.discovered{border-color:var(--ic,var(--border));box-shadow:0 0 18px -4px var(--icg,transparent);}
-.item-card.equipped{outline:2px solid var(--gold);outline-offset:2px;}
-.item-card .icon{font-size:2rem;margin-bottom:6px;}
+.item-card:hover{transform:translateY(-4px) scale(1.03);}
+.item-card.discovered{border-color:var(--ic,var(--border));box-shadow:0 0 20px -4px var(--icg,transparent),0 0 0 1px var(--icg,transparent) inset;}
+.item-card.discovered:hover{box-shadow:0 0 32px -2px var(--icg,transparent),0 0 0 1px var(--icg,transparent) inset;}
+.item-card.equipped{outline:2px solid var(--gold);outline-offset:2px;box-shadow:0 0 26px -2px rgba(243,198,92,.7);}
+.item-card .icon{font-size:2rem;margin-bottom:6px;filter:drop-shadow(0 0 6px var(--icg,transparent));}
 .item-card.locked .icon{filter:brightness(0) opacity(.55);}
 .item-card .iname{font-size:.78rem;font-weight:700;margin-bottom:2px;min-height:2.1em;}
-.item-card .irar{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
+.item-card .irar{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;text-shadow:0 0 8px currentColor;}
 .item-card .icount{font-size:.66rem;color:var(--text-2);margin-top:4px;}
 .item-card .badge-eq{position:absolute;top:6px;right:6px;font-size:.85rem;}
-.item-card.locked{cursor:default;opacity:.7;}
+.item-card.locked{cursor:default;opacity:.75;}
+
+/* rarezas altas: brillo pulsante creciente */
+.item-card.discovered[data-rarity="6"]{animation:glowPulseMid 2.6s ease-in-out infinite;}
+.item-card.discovered[data-rarity="7"]{animation:glowPulseMid 2.1s ease-in-out infinite;}
+.item-card.discovered[data-rarity="8"]{animation:glowPulseHigh 1.8s ease-in-out infinite;}
+@keyframes glowPulseMid{
+  0%,100%{box-shadow:0 0 18px -4px var(--icg,transparent),0 0 0 1px var(--icg,transparent) inset;}
+  50%{box-shadow:0 0 32px 2px var(--icg,transparent),0 0 0 1px var(--icg,transparent) inset;}
+}
+@keyframes glowPulseHigh{
+  0%,100%{box-shadow:0 0 20px -2px var(--icg,transparent),0 0 0 1px var(--icg,transparent) inset;border-color:var(--ic);}
+  50%{box-shadow:0 0 40px 4px var(--icg,transparent),0 0 0 1px var(--icg,transparent) inset;border-color:#fff;}
+}
+/* divino: el borde alterna entre dorado y blanco */
+.item-card.discovered[data-rarity="9"]{animation:divineCycle 2.4s ease-in-out infinite;}
+@keyframes divineCycle{
+  0%,100%{border-color:#fbbf24;box-shadow:0 0 24px -2px rgba(251,191,36,.9),0 0 46px 4px rgba(251,191,36,.35),0 0 0 1px rgba(251,191,36,.5) inset;}
+  50%{border-color:#ffffff;box-shadow:0 0 26px -2px rgba(255,255,255,1),0 0 50px 8px rgba(255,255,255,.55),0 0 0 1px rgba(255,255,255,.7) inset;}
+}
+/* objetos aun no descubiertos de alta rareza: un tenue destello para tentar la próxima tirada */
+.item-card.locked[data-rarity="7"],.item-card.locked[data-rarity="8"],.item-card.locked[data-rarity="9"]{
+  animation:lockedTease 3.2s ease-in-out infinite;
+}
+@keyframes lockedTease{
+  0%,100%{box-shadow:0 0 0 rgba(255,255,255,0);border-color:var(--border);}
+  50%{box-shadow:0 0 16px -4px var(--icg,rgba(255,255,255,.3));border-color:var(--ic,var(--border-strong));}
+}
 
 /* ---------- shop ---------- */
 .shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;}
 .upg-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:8px;}
 .upg-head{display:flex;align-items:center;gap:10px;}
 .upg-icon{font-size:1.6rem;}
-.upg-name{font-weight:700;}
+.upg-name{font-weight:800;text-shadow:0 0 10px rgba(124,157,255,.4);}
 .upg-level{font-size:.75rem;color:var(--text-1);}
 .upg-desc{font-size:.8rem;color:var(--text-1);flex:1;}
 .upg-bar{height:5px;border-radius:4px;background:var(--panel-light);overflow:hidden;}
 .upg-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--gold));}
 .buy-btn{
-  padding:9px 12px;border-radius:10px;border:1px solid var(--border-strong);background:var(--panel-light);
-  color:var(--text-0);font-weight:700;cursor:pointer;transition:.15s;
+  position:relative;overflow:hidden;
+  padding:10px 12px;border-radius:10px;border:1px solid var(--border-strong);background:var(--panel-light);
+  color:var(--text-0);font-weight:700;cursor:pointer;
+  transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease, background .15s ease;
 }
-.buy-btn:hover:not(:disabled){background:rgba(124,157,255,.18);}
+.buy-btn::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(120deg,transparent 30%,rgba(124,157,255,.4) 50%,transparent 70%);
+  transform:translateX(-140%);transition:transform .5s ease;
+}
+.buy-btn:hover:not(:disabled)::before{transform:translateX(140%);}
+.buy-btn:hover:not(:disabled){background:rgba(124,157,255,.2);border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 20px -6px rgba(124,157,255,.55);}
+.buy-btn:active:not(:disabled){transform:translateY(0);}
 .buy-btn:disabled{opacity:.4;cursor:not-allowed;}
 
 /* ---------- collection table ---------- */
@@ -252,17 +326,22 @@ table.coll-table tr:hover td{background:rgba(255,255,255,.02);}
 .ach-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;gap:12px;align-items:flex-start;}
 .ach-card.unlocked{border-color:rgba(74,222,128,.5);box-shadow:0 0 16px -6px rgba(74,222,128,.5);}
 .ach-icon{font-size:1.6rem;width:40px;height:40px;flex:0 0 40px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--panel-light);}
-.ach-name{font-weight:700;font-size:.9rem;}
+.ach-name{font-weight:800;font-size:.9rem;}
+.ach-card.unlocked .ach-name{text-shadow:0 0 12px rgba(74,222,128,.6);}
 .ach-desc{font-size:.76rem;color:var(--text-1);margin-top:2px;}
 .ach-reward{font-size:.72rem;color:var(--gold);margin-top:4px;}
 
 /* ---------- stats ---------- */
 .stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;}
 .stat-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px;}
-.stat-val{font-size:1.4rem;font-weight:800;color:var(--text-0);}
+.stat-val{font-size:1.4rem;font-weight:800;color:var(--text-0);text-shadow:0 0 14px rgba(124,157,255,.4);}
+.stat-card{transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;}
+.stat-card:hover{transform:translateY(-3px);border-color:var(--border-strong);box-shadow:0 0 20px -6px rgba(124,157,255,.5);}
 .stat-lab{font-size:.75rem;color:var(--text-1);margin-top:4px;}
 .danger-zone{margin-top:20px;padding:14px;border:1px dashed var(--bad);border-radius:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
-.danger-btn{background:rgba(248,113,113,.15);color:var(--bad);border:1px solid var(--bad);padding:9px 16px;border-radius:10px;cursor:pointer;font-weight:700;}
+.danger-btn{background:rgba(248,113,113,.15);color:var(--bad);border:1px solid var(--bad);padding:9px 16px;border-radius:10px;cursor:pointer;font-weight:700;transition:transform .15s ease, box-shadow .2s ease, background .15s ease;}
+.danger-btn:hover{background:rgba(248,113,113,.28);box-shadow:0 0 18px -2px rgba(248,113,113,.65);transform:translateY(-2px);}
+.danger-btn:active{transform:translateY(0);}
 
 /* ---------- toasts ---------- */
 #toastContainer{position:fixed;top:16px;right:16px;z-index:90;display:flex;flex-direction:column;gap:8px;max-width:280px;}
@@ -430,6 +509,49 @@ const ITEMS = [
   {id:"cristal",    name:"Cristal Galáctico",    icon:"🔮", rarity:9, denom:20000,   cps:600,  room:4},
   {id:"reliquia",   name:"Reliquia Perdida",     icon:"🗝️", rarity:9, denom:100000,  cps:1500, room:4},
   {id:"artefacto",  name:"Artefacto Prohibido",  icon:"🕳️", rarity:9, denom:1000000, cps:5000, room:4},
+
+  // --- objetos adicionales ---
+  {id:"plato",           name:"Plato de Cerámica",       icon:"🍽️", rarity:0, denom:3,      cps:1,    room:0},
+  {id:"herramienta",     name:"Herramienta de Piedra",   icon:"🪨", rarity:0, denom:3,      cps:1,    room:0},
+  {id:"fragmento",       name:"Fragmento de Mosaico",    icon:"🧩", rarity:0, denom:4,      cps:1,    room:0},
+  {id:"broche",          name:"Broche de Bronce",        icon:"🧷", rarity:1, denom:6,      cps:2,    room:0},
+  {id:"jarra",           name:"Jarra de Barro",          icon:"🍶", rarity:1, denom:7,      cps:2,    room:0},
+  {id:"amuleto_hueso",   name:"Amuleto de Hueso",        icon:"🪬", rarity:1, denom:8,      cps:2,    room:0},
+
+  {id:"escudo",          name:"Escudo Espartano",        icon:"🛡️", rarity:2, denom:13,     cps:4,    room:1},
+  {id:"daga",            name:"Daga de Bronce",          icon:"🗡️", rarity:2, denom:17,     cps:4,    room:1},
+  {id:"arco",            name:"Arco Corto",              icon:"🏹", rarity:2, denom:20,     cps:5,    room:1},
+  {id:"totem",           name:"Tótem Tribal",            icon:"🪵", rarity:2, denom:22,     cps:5,    room:1},
+  {id:"lanza",           name:"Lanza de Guerra",         icon:"🔱", rarity:3, denom:35,     cps:8,    room:1},
+  {id:"hacha",           name:"Hacha de Batalla",        icon:"🪓", rarity:3, denom:45,     cps:9,    room:1},
+  {id:"yelmo",           name:"Yelmo de Guerra",         icon:"⛑️", rarity:3, denom:48,     cps:9,    room:1},
+  {id:"bumeran",         name:"Bumerán Aborigen",        icon:"🪃", rarity:3, denom:50,     cps:10,   room:1},
+
+  {id:"tablilla",        name:"Tablilla Cuneiforme",     icon:"📜", rarity:4, denom:70,     cps:14,   room:2},
+  {id:"estatuilla",      name:"Estatuilla Egipcia",      icon:"🗿", rarity:4, denom:85,     cps:16,   room:2},
+  {id:"papiro",          name:"Papiro Sagrado",          icon:"📃", rarity:4, denom:90,     cps:16,   room:2},
+  {id:"escarabajo",      name:"Escarabajo Sagrado",      icon:"🪲", rarity:4, denom:95,     cps:17,   room:2},
+  {id:"ambar",           name:"Ámbar con Insecto",       icon:"🔶", rarity:5, denom:220,    cps:28,   room:2},
+  {id:"huevo_dino",      name:"Huevo de Dinosaurio",     icon:"🥚", rarity:5, denom:270,    cps:32,   room:2},
+  {id:"colmillo",        name:"Colmillo de Mamut",       icon:"🦣", rarity:5, denom:300,    cps:34,   room:2},
+  {id:"concha",          name:"Concha Prehistórica",     icon:"🐚", rarity:5, denom:230,    cps:29,   room:2},
+
+  {id:"zafiro",          name:"Zafiro Real",             icon:"🔷", rarity:6, denom:650,    cps:58,   room:3},
+  {id:"rubi",            name:"Rubí de Fuego",           icon:"♦️", rarity:6, denom:750,    cps:63,   room:3},
+  {id:"esmeralda",       name:"Esmeralda Ancestral",     icon:"🟢", rarity:6, denom:800,    cps:66,   room:3},
+  {id:"asteroide",       name:"Fragmento de Asteroide",  icon:"🌠", rarity:7, denom:1300,   cps:110,  room:3},
+  {id:"nucleo_cometa",   name:"Núcleo de Cometa",        icon:"💫", rarity:7, denom:1700,   cps:130,  room:3},
+  {id:"polvo_estelar",   name:"Polvo de Estrellas",      icon:"✨", rarity:7, denom:1600,   cps:125,  room:3},
+
+  {id:"cetro",           name:"Cetro Real",              icon:"🪄", rarity:8, denom:4500,   cps:230,  room:4},
+  {id:"trono_min",       name:"Miniatura del Trono",     icon:"🪑", rarity:8, denom:5500,   cps:270,  room:4},
+  {id:"sello_real",      name:"Sello Real de Cera",      icon:"🕯️", rarity:8, denom:4800,   cps:245,  room:4},
+  {id:"orbe_arcano",     name:"Orbe Arcano",             icon:"🟣", rarity:9, denom:15000,  cps:550,  room:4},
+  {id:"corazon_estrella",name:"Corazón de Estrella",     icon:"💠", rarity:9, denom:35000,  cps:750,  room:4},
+  {id:"pluma_fenix",     name:"Pluma de Fénix",          icon:"🪶", rarity:9, denom:50000,  cps:900,  room:4},
+  {id:"lagrima_dios",    name:"Lágrima de Dios",         icon:"💧", rarity:9, denom:150000, cps:1800, room:4},
+  {id:"corona_cosmica",  name:"Corona Cósmica",          icon:"🌟", rarity:9, denom:300000, cps:2500, room:4},
+  {id:"ojo_infinito",    name:"Ojo del Infinito",        icon:"👁️", rarity:9, denom:500000, cps:3500, room:4},
 ];
 const ITEM_MAP = Object.fromEntries(ITEMS.map(it=>[it.id,it]));
 
@@ -456,8 +578,9 @@ const ACHIEVEMENTS = [
   {id:"room2",         name:"Sala Completa: Culturas Perdidas", icon:"🗿", desc:"Completa la Sala de Culturas Perdidas.", reward:400, cond:s=>roomComplete(s,2)},
   {id:"room3",         name:"Sala Completa: Sala Cósmica", icon:"🌌", desc:"Completa la Sala Cósmica.", reward:700, cond:s=>roomComplete(s,3)},
   {id:"room4",         name:"Sala Completa: Cámara Secreta", icon:"🔒", desc:"Completa la Cámara Secreta.", reward:3000, cond:s=>roomComplete(s,4)},
-  {id:"half_museum",  name:"Mitad del Camino",     icon:"🧭", desc:"Descubre 6 objetos distintos.", reward:300,  cond:s=>Object.keys(s.items).length>=6},
-  {id:"full_museum",  name:"Museo Completo",       icon:"👑", desc:"Descubre los 12 objetos del museo.", reward:10000, cond:s=>Object.keys(s.items).length>=12},
+  {id:"quarter_museum",name:"Coleccionista en Marcha", icon:"🧳", desc:"Descubre una cuarta parte del museo.", reward:150, cond:s=>Object.keys(s.items).length>=Math.ceil(ITEMS.length/4)},
+  {id:"half_museum",  name:"Mitad del Camino",     icon:"🧭", desc:"Descubre la mitad de los objetos del museo.", reward:600,  cond:s=>Object.keys(s.items).length>=Math.ceil(ITEMS.length/2)},
+  {id:"full_museum",  name:"Museo Completo",       icon:"👑", desc:"Descubre todos los objetos del museo.", reward:25000, cond:s=>Object.keys(s.items).length>=ITEMS.length},
   {id:"get_legendary",name:"Coleccionista Legendario", icon:"✨", desc:"Consigue un objeto Legendario o superior.", reward:100, cond:s=>s.stats.highestRarity>=4},
   {id:"get_prohibido",name:"Más Allá de lo Permitido", icon:"🔥", desc:"Consigue un objeto Prohibido o superior.", reward:600, cond:s=>s.stats.highestRarity>=7},
   {id:"get_divino",   name:"Toque Divino",         icon:"⭐", desc:"Consigue un objeto Divino.", reward:3000, cond:s=>s.stats.highestRarity>=9},
@@ -835,14 +958,14 @@ function itemCardHtml(item){
   const rar=RARITIES[item.rarity];
   const isEq=state.equipped.includes(item.id);
   if(!owned){
-    return `<div class="item-card locked">
+    return `<div class="item-card locked" data-rarity="${item.rarity}" style="--ic:${rar.color};--icg:${rar.glow};">
       <div class="icon">❔</div>
       <div class="iname">???</div>
       <div class="irar" style="color:var(--text-2);">${rar.name}</div>
       <div class="icount">${fmtDenom(item.denom)}</div>
     </div>`;
   }
-  return `<div class="item-card discovered ${isEq?"equipped":""}" data-id="${item.id}" style="--ic:${rar.color};--icg:${rar.glow};">
+  return `<div class="item-card discovered ${isEq?"equipped":""}" data-id="${item.id}" data-rarity="${item.rarity}" style="--ic:${rar.color};--icg:${rar.glow};">
     ${isEq?'<div class="badge-eq">⭐</div>':""}
     <div class="icon">${item.icon}</div>
     <div class="iname">${item.name}</div>
@@ -925,7 +1048,7 @@ function renderCollection(){
     if(!owned){
       return `<tr style="opacity:.55;">
         <td>❔</td><td>???</td>
-        <td><span class="rar-pill" style="background:${rar.glow};color:#0a0a12;">${rar.name}</span></td>
+        <td><span class="rar-pill" style="background:${rar.glow};color:#0a0a12;box-shadow:0 0 10px ${rar.glow};">${rar.name}</span></td>
         <td>${fmtDenom(item.denom)}</td><td>-</td><td>0</td><td>-</td>
       </tr>`;
     }

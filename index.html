@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Museum RNG</title>
+<style>
+:root{
+  --bg-0:#070912;
+  --bg-1:#0d1120;
+  --bg-2:#131a2e;
+  --panel:rgba(22,28,48,.68);
+  --panel-light:rgba(34,42,68,.55);
+  --border:rgba(148,163,255,.14);
+  --border-strong:rgba(148,163,255,.28);
+  --text-0:#eef1ff;
+  --text-1:#aab0d6;
+  --text-2:#6b71a0;
+  --accent:#7c9dff;
+  --accent-2:#c084fc;
+  --gold:#f3c65c;
+  --good:#4ade80;
+  --bad:#f87171;
+  --r0:#9ca3af; --r0g:rgba(156,163,175,.55);
+  --r1:#3ddc97; --r1g:rgba(61,220,151,.55);
+  --r2:#38bdf8; --r2g:rgba(56,189,248,.6);
+  --r3:#a78bfa; --r3g:rgba(167,139,250,.65);
+  --r4:#fb923c; --r4g:rgba(251,146,60,.65);
+  --r5:#f87171; --r5g:rgba(248,113,113,.7);
+  --r6:#f472b6; --r6g:rgba(244,114,182,.75);
+  --r7:#ef4444; --r7g:rgba(239,68,68,.85);
+  --r8:#2dd4bf; --r8g:rgba(45,212,191,.85);
+  --r9:#fbbf24; --r9g:rgba(251,191,36,.95);
+  --radius:16px;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family:"Segoe UI",Inter,system-ui,-apple-system,sans-serif;
+  background:
+    radial-gradient(circle at 15% 0%, #1a2240 0%, transparent 45%),
+    radial-gradient(circle at 85% 10%, #241a3d 0%, transparent 45%),
+    linear-gradient(180deg, var(--bg-0), var(--bg-1) 40%, var(--bg-2));
+  color:var(--text-0);
+  overflow-x:hidden;
+  min-height:100vh;
+}
+#starfield{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.6;}
+#particleCanvas{position:fixed;inset:0;z-index:60;pointer-events:none;}
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:10px;}
+::-webkit-scrollbar-track{background:transparent;}
+
+.app{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:14px 16px 60px;}
+
+/* ---------- topbar ---------- */
+.topbar{
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;
+  padding:12px 18px;border-radius:var(--radius);
+  background:var(--panel);border:1px solid var(--border);
+  backdrop-filter:blur(14px);
+  box-shadow:0 10px 30px rgba(0,0,0,.35);
+  position:sticky;top:10px;z-index:40;
+}
+.brand{font-size:1.15rem;font-weight:700;display:flex;align-items:center;gap:8px;letter-spacing:.3px;
+  background:linear-gradient(90deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.brand span:first-child{-webkit-text-fill-color:initial;}
+.resources{display:flex;gap:10px;margin-left:auto;}
+.coin-display,.cps-display{
+  display:flex;align-items:center;gap:6px;font-weight:700;font-variant-numeric:tabular-nums;
+  padding:7px 12px;border-radius:999px;background:var(--panel-light);border:1px solid var(--border);
+  font-size:.92rem;
+}
+.coin-display{color:var(--gold);}
+.cps-display{color:var(--good);}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;order:5;width:100%;}
+.tab-btn{
+  background:transparent;border:1px solid transparent;color:var(--text-1);
+  padding:8px 12px;border-radius:10px;cursor:pointer;font-size:.85rem;font-weight:600;
+  transition:all .18s ease;white-space:nowrap;
+}
+.tab-btn:hover{background:var(--panel-light);color:var(--text-0);}
+.tab-btn.active{background:linear-gradient(135deg,rgba(124,157,255,.25),rgba(192,132,252,.2));color:var(--text-0);border-color:var(--border-strong);}
+.icon-btn{
+  background:var(--panel-light);border:1px solid var(--border);color:var(--text-0);
+  width:38px;height:38px;border-radius:10px;cursor:pointer;font-size:1rem;
+  display:flex;align-items:center;justify-content:center;transition:.15s;
+}
+.icon-btn:hover{border-color:var(--border-strong);transform:translateY(-1px);}
+
+main{margin-top:16px;}
+.view{display:none;animation:fadeIn .35s ease;}
+.view.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+.panel{
+  background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
+  padding:18px;backdrop-filter:blur(14px);box-shadow:0 10px 30px rgba(0,0,0,.28);
+}
+h2.section-title{margin:0 0 14px;font-size:1.05rem;color:var(--text-0);display:flex;align-items:center;gap:8px;}
+.subtle{color:var(--text-1);font-size:.85rem;}
+
+/* ---------- roll view ---------- */
+.roll-layout{display:grid;grid-template-columns:1fr;gap:16px;}
+.reel-wrap{position:relative;margin:6px auto 18px;max-width:640px;width:100%;min-width:0;}
+.reel-viewport{
+  position:relative;height:120px;overflow:hidden;border-radius:14px;min-width:0;
+  background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.15));
+  border:1px solid var(--border-strong);
+  box-shadow:inset 0 0 40px rgba(0,0,0,.6);
+}
+.reel-viewport::before,.reel-viewport::after{
+  content:"";position:absolute;top:0;bottom:0;width:70px;z-index:3;pointer-events:none;
+}
+.reel-viewport::before{left:0;background:linear-gradient(90deg,var(--bg-1),transparent);}
+.reel-viewport::after{right:0;background:linear-gradient(-90deg,var(--bg-1),transparent);}
+.reel-center-marker{
+  position:absolute;left:50%;top:0;bottom:0;width:2px;transform:translateX(-50%);
+  background:linear-gradient(180deg,transparent,var(--gold),transparent);z-index:4;
+  box-shadow:0 0 12px var(--gold);
+}
+.reel-track{display:flex;height:100%;align-items:center;will-change:transform;min-width:0;transition:transform var(--anim-dur,2.2s) cubic-bezier(.1,.85,.25,1);}
+.reel-cell{
+  flex:0 0 110px;height:100px;margin:0 5px;border-radius:12px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:var(--panel-light);border:1px solid var(--border);font-size:2.2rem;
+}
+.reel-cell.landing{animation:landPulse .5s ease;}
+@keyframes landPulse{0%{transform:scale(1);}40%{transform:scale(1.18);}100%{transform:scale(1);}}
+
+.roll-controls{display:flex;flex-direction:column;align-items:center;gap:8px;}
+.roll-btn{
+  position:relative;overflow:hidden;
+  padding:20px 60px;font-size:1.35rem;font-weight:800;letter-spacing:1px;color:#0a0a12;
+  background:linear-gradient(135deg,var(--gold),#ffdf8a);
+  border:none;border-radius:18px;cursor:pointer;
+  box-shadow:0 10px 30px rgba(243,198,92,.35),0 0 0 1px rgba(255,255,255,.2) inset;
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+.roll-btn:hover:not(:disabled){transform:translateY(-2px) scale(1.02);box-shadow:0 14px 36px rgba(243,198,92,.5);}
+.roll-btn:active:not(:disabled){transform:translateY(1px) scale(.98);}
+.roll-btn:disabled{opacity:.4;cursor:not-allowed;filter:grayscale(.4);}
+.roll-btn small{display:block;font-size:.65rem;font-weight:700;opacity:.75;margin-top:3px;letter-spacing:.5px;}
+.roll-hint{color:var(--text-2);font-size:.78rem;}
+
+.equipped-bar{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:20px;}
+.equip-slot{
+  width:64px;height:64px;border-radius:12px;border:1.5px dashed var(--border-strong);
+  display:flex;align-items:center;justify-content:center;font-size:1.6rem;background:var(--panel-light);
+  position:relative;
+}
+.equip-slot.filled{border-style:solid;}
+.equip-slot .mini-cps{position:absolute;bottom:-18px;font-size:.6rem;color:var(--good);white-space:nowrap;}
+
+.recent-pulls{display:flex;gap:6px;flex-wrap:wrap;margin-top:26px;justify-content:center;}
+.recent-chip{
+  font-size:1.15rem;width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+  background:var(--panel-light);border:1px solid var(--border);
+}
+
+/* ---------- shake / screen effects ---------- */
+.shake{animation:shakeAnim .4s ease;}
+@keyframes shakeAnim{
+  0%,100%{transform:translateX(0);}
+  20%{transform:translateX(-8px) rotate(-.5deg);}
+  40%{transform:translateX(7px) rotate(.5deg);}
+  60%{transform:translateX(-5px);}
+  80%{transform:translateX(4px);}
+}
+#flashOverlay{position:fixed;inset:0;z-index:55;pointer-events:none;opacity:0;background:radial-gradient(circle,#fff,transparent 70%);}
+#flashOverlay.flash{animation:flashAnim .6s ease;}
+@keyframes flashAnim{0%{opacity:0;}15%{opacity:.85;}100%{opacity:0;}}
+
+/* ---------- result modal ---------- */
+#resultOverlay{
+  position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;
+  background:rgba(4,6,14,.65);backdrop-filter:blur(4px);
+}
+#resultOverlay.show{display:flex;}
+.result-card{
+  width:min(360px,88vw);border-radius:20px;padding:30px 24px 24px;text-align:center;
+  background:linear-gradient(160deg,var(--panel),var(--panel-light));
+  border:2px solid var(--rc,var(--r0));
+  box-shadow:0 0 60px var(--rcg,var(--r0g)), 0 20px 50px rgba(0,0,0,.5);
+  animation:resultPop .45s cubic-bezier(.2,.9,.3,1.3);
+}
+@keyframes resultPop{from{transform:scale(.6);opacity:0;}to{transform:scale(1);opacity:1;}}
+.result-icon{font-size:4rem;margin-bottom:8px;filter:drop-shadow(0 0 18px var(--rcg,var(--r0g)));animation:iconFloat 2s ease-in-out infinite;}
+@keyframes iconFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+.result-rarity{font-weight:800;letter-spacing:1.5px;text-transform:uppercase;font-size:.78rem;color:var(--rc,var(--r0));margin-bottom:4px;}
+.result-name{font-size:1.3rem;font-weight:800;margin-bottom:10px;}
+.result-meta{display:flex;justify-content:center;gap:14px;color:var(--text-1);font-size:.8rem;margin-bottom:16px;}
+.result-new-badge{display:inline-block;background:linear-gradient(90deg,var(--good),#22c55e);color:#04150b;font-weight:800;font-size:.7rem;padding:3px 10px;border-radius:999px;margin-bottom:10px;}
+.result-close{
+  margin-top:6px;padding:9px 26px;border-radius:10px;border:1px solid var(--border-strong);
+  background:var(--panel-light);color:var(--text-0);cursor:pointer;font-weight:700;
+}
+
+/* ---------- museum ---------- */
+.rooms{display:flex;flex-direction:column;gap:18px;}
+.room{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+.room-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.room-title{font-weight:700;display:flex;align-items:center;gap:8px;}
+.room-progress{font-size:.78rem;color:var(--text-1);}
+.room-bar{height:6px;border-radius:4px;background:var(--panel-light);overflow:hidden;margin-top:6px;}
+.room-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .5s ease;}
+.item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;}
+.item-card{
+  border-radius:14px;padding:12px 10px;text-align:center;cursor:pointer;position:relative;
+  background:var(--panel-light);border:1.5px solid var(--border);transition:transform .15s ease, box-shadow .15s ease;
+  user-select:none;
+}
+.item-card:hover{transform:translateY(-3px);}
+.item-card.discovered{border-color:var(--ic,var(--border));box-shadow:0 0 18px -4px var(--icg,transparent);}
+.item-card.equipped{outline:2px solid var(--gold);outline-offset:2px;}
+.item-card .icon{font-size:2rem;margin-bottom:6px;}
+.item-card.locked .icon{filter:brightness(0) opacity(.55);}
+.item-card .iname{font-size:.78rem;font-weight:700;margin-bottom:2px;min-height:2.1em;}
+.item-card .irar{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
+.item-card .icount{font-size:.66rem;color:var(--text-2);margin-top:4px;}
+.item-card .badge-eq{position:absolute;top:6px;right:6px;font-size:.85rem;}
+.item-card.locked{cursor:default;opacity:.7;}
+
+/* ---------- shop ---------- */
+.shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;}
+.upg-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:8px;}
+.upg-head{display:flex;align-items:center;gap:10px;}
+.upg-icon{font-size:1.6rem;}
+.upg-name{font-weight:700;}
+.upg-level{font-size:.75rem;color:var(--text-1);}
+.upg-desc{font-size:.8rem;color:var(--text-1);flex:1;}
+.upg-bar{height:5px;border-radius:4px;background:var(--panel-light);overflow:hidden;}
+.upg-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--gold));}
+.buy-btn{
+  padding:9px 12px;border-radius:10px;border:1px solid var(--border-strong);background:var(--panel-light);
+  color:var(--text-0);font-weight:700;cursor:pointer;transition:.15s;
+}
+.buy-btn:hover:not(:disabled){background:rgba(124,157,255,.18);}
+.buy-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* ---------- collection table ---------- */
+.coll-table-wrap{overflow-x:auto;}
+table.coll-table{width:100%;border-collapse:collapse;font-size:.82rem;min-width:720px;}
+table.coll-table th{text-align:left;padding:8px 10px;color:var(--text-1);font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border);}
+table.coll-table td{padding:9px 10px;border-bottom:1px solid var(--border);}
+table.coll-table tr:hover td{background:rgba(255,255,255,.02);}
+.rar-pill{padding:2px 9px;border-radius:999px;font-size:.68rem;font-weight:700;display:inline-block;}
+
+/* ---------- achievements ---------- */
+.ach-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
+.ach-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;gap:12px;align-items:flex-start;}
+.ach-card.unlocked{border-color:rgba(74,222,128,.5);box-shadow:0 0 16px -6px rgba(74,222,128,.5);}
+.ach-icon{font-size:1.6rem;width:40px;height:40px;flex:0 0 40px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--panel-light);}
+.ach-name{font-weight:700;font-size:.9rem;}
+.ach-desc{font-size:.76rem;color:var(--text-1);margin-top:2px;}
+.ach-reward{font-size:.72rem;color:var(--gold);margin-top:4px;}
+
+/* ---------- stats ---------- */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;}
+.stat-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px;}
+.stat-val{font-size:1.4rem;font-weight:800;color:var(--text-0);}
+.stat-lab{font-size:.75rem;color:var(--text-1);margin-top:4px;}
+.danger-zone{margin-top:20px;padding:14px;border:1px dashed var(--bad);border-radius:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
+.danger-btn{background:rgba(248,113,113,.15);color:var(--bad);border:1px solid var(--bad);padding:9px 16px;border-radius:10px;cursor:pointer;font-weight:700;}
+
+/* ---------- toasts ---------- */
+#toastContainer{position:fixed;top:16px;right:16px;z-index:90;display:flex;flex-direction:column;gap:8px;max-width:280px;}
+.toast{
+  background:var(--panel);border:1px solid var(--border-strong);border-radius:12px;padding:11px 14px;
+  backdrop-filter:blur(10px);box-shadow:0 10px 24px rgba(0,0,0,.4);font-size:.82rem;
+  animation:toastIn .3s ease, toastOut .3s ease 3.4s forwards;
+}
+@keyframes toastIn{from{transform:translateX(40px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+@keyframes toastOut{to{transform:translateX(40px);opacity:0;}}
+.toast b{color:var(--gold);}
+
+footer.foot{text-align:center;color:var(--text-2);font-size:.72rem;margin-top:30px;}
+
+@media (max-width:640px){
+  .roll-btn{padding:18px 40px;font-size:1.1rem;}
+  .reel-cell{flex-basis:86px;font-size:1.7rem;}
+}
+</style>
+</head>
+<body>
+<canvas id="starfield"></canvas>
+<canvas id="particleCanvas"></canvas>
+<div id="flashOverlay"></div>
+
+<div class="app" id="app">
+  <header class="topbar" id="topbar">
+    <div class="brand">🏛️ <span>Museum RNG</span></div>
+    <div class="resources">
+      <div class="coin-display">🪙 <span id="coinCount">0</span></div>
+      <div class="cps-display">⚡ <span id="cpsCount">0</span>/s</div>
+    </div>
+    <button class="icon-btn" id="soundToggle" title="Sonido">🔊</button>
+    <nav class="tabs" id="tabs">
+      <button class="tab-btn active" data-tab="roll">🎰 Tirar</button>
+      <button class="tab-btn" data-tab="museum">🏛️ Museo</button>
+      <button class="tab-btn" data-tab="shop">🛒 Tienda</button>
+      <button class="tab-btn" data-tab="collection">📖 Colección</button>
+      <button class="tab-btn" data-tab="achievements">🏆 Logros</button>
+      <button class="tab-btn" data-tab="stats">📊 Estadísticas</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ROLL VIEW -->
+    <section class="view active" id="view-roll">
+      <div class="panel roll-layout">
+        <h2 class="section-title">🎰 Sala de Tiradas</h2>
+        <div class="reel-wrap">
+          <div class="reel-viewport">
+            <div class="reel-track" id="reelTrack"></div>
+            <div class="reel-center-marker"></div>
+          </div>
+        </div>
+        <div class="roll-controls">
+          <button class="roll-btn" id="rollBtn">TIRAR<small id="rollCostLabel">Gratis</small></button>
+          <div class="roll-hint" id="rollHint">Tu primera tirada es gratuita. ¡Pruébala!</div>
+        </div>
+        <div class="equipped-bar" id="equippedBar"></div>
+        <div class="recent-pulls" id="recentPulls"></div>
+      </div>
+    </section>
+
+    <!-- MUSEUM VIEW -->
+    <section class="view" id="view-museum">
+      <div class="rooms" id="roomsContainer"></div>
+    </section>
+
+    <!-- SHOP VIEW -->
+    <section class="view" id="view-shop">
+      <div class="panel">
+        <h2 class="section-title">🛒 Tienda de Mejoras</h2>
+        <div class="shop-grid" id="shopGrid"></div>
+      </div>
+    </section>
+
+    <!-- COLLECTION VIEW -->
+    <section class="view" id="view-collection">
+      <div class="panel">
+        <h2 class="section-title">📖 Colección Completa</h2>
+        <div class="coll-table-wrap">
+          <table class="coll-table">
+            <thead><tr>
+              <th></th><th>Objeto</th><th>Rareza</th><th>Probabilidad</th><th>Monedas/s</th><th>Veces</th><th>Descubierto</th>
+            </tr></thead>
+            <tbody id="collectionBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ACHIEVEMENTS VIEW -->
+    <section class="view" id="view-achievements">
+      <div class="panel">
+        <h2 class="section-title">🏆 Logros</h2>
+        <div class="ach-grid" id="achGrid"></div>
+      </div>
+    </section>
+
+    <!-- STATS VIEW -->
+    <section class="view" id="view-stats">
+      <div class="panel">
+        <h2 class="section-title">📊 Estadísticas</h2>
+        <div class="stat-grid" id="statGrid"></div>
+        <div class="danger-zone">
+          <div>
+            <div style="font-weight:700;color:var(--bad);">Reiniciar progreso</div>
+            <div class="subtle">Borra permanentemente todos los datos guardados.</div>
+          </div>
+          <button class="danger-btn" id="resetBtn">Reiniciar Museo</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">Museum RNG · el progreso se guarda automáticamente en este navegador</footer>
+</div>
+
+<div id="resultOverlay">
+  <div class="result-card" id="resultCard">
+    <div class="result-new-badge" id="resultNewBadge" style="display:none;">¡NUEVO DESCUBRIMIENTO!</div>
+    <div class="result-icon" id="resultIcon"></div>
+    <div class="result-rarity" id="resultRarity"></div>
+    <div class="result-name" id="resultName"></div>
+    <div class="result-meta">
+      <span id="resultProb"></span>
+      <span id="resultCps"></span>
+    </div>
+    <button class="result-close" id="resultClose">Continuar</button>
+  </div>
+</div>
+
+<div id="toastContainer"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* =========================================================
+   DATA
+   ========================================================= */
+const RARITIES = [
+  {name:"Común",        color:"var(--r0)", glow:"var(--r0g)"},
+  {name:"Poco Común",   color:"var(--r1)", glow:"var(--r1g)"},
+  {name:"Raro",         color:"var(--r2)", glow:"var(--r2g)"},
+  {name:"Épico",        color:"var(--r3)", glow:"var(--r3g)"},
+  {name:"Legendario",   color:"var(--r4)", glow:"var(--r4g)"},
+  {name:"Mítico",       color:"var(--r5)", glow:"var(--r5g)"},
+  {name:"Omega",        color:"var(--r6)", glow:"var(--r6g)"},
+  {name:"Prohibido",    color:"var(--r7)", glow:"var(--r7g)"},
+  {name:"Secreto",      color:"var(--r8)", glow:"var(--r8g)"},
+  {name:"Divino",       color:"var(--r9)", glow:"var(--r9g)"},
+];
+
+const ITEMS = [
+  {id:"vasija",     name:"Vasija Antigua",       icon:"🏺", rarity:0, denom:2,       cps:1,    room:0},
+  {id:"moneda",     name:"Moneda Romana",        icon:"🪙", rarity:1, denom:5,       cps:2,    room:0},
+  {id:"casco",      name:"Casco Vikingo",        icon:"🪖", rarity:2, denom:15,      cps:4,    room:1},
+  {id:"espada",     name:"Espada Medieval",      icon:"⚔️", rarity:3, denom:40,      cps:8,    room:1},
+  {id:"mascara",    name:"Máscara Maya",         icon:"🎭", rarity:4, denom:80,      cps:15,   room:2},
+  {id:"fosil",      name:"Fósil de Dinosaurio",  icon:"🦴", rarity:5, denom:250,     cps:30,   room:2},
+  {id:"diamante",   name:"Diamante Gigante",     icon:"💎", rarity:6, denom:700,     cps:60,   room:3},
+  {id:"meteorito",  name:"Meteorito",            icon:"☄️", rarity:7, denom:1500,    cps:120,  room:3},
+  {id:"corona",     name:"Corona Imperial",      icon:"👑", rarity:8, denom:5000,    cps:250,  room:4},
+  {id:"cristal",    name:"Cristal Galáctico",    icon:"🔮", rarity:9, denom:20000,   cps:600,  room:4},
+  {id:"reliquia",   name:"Reliquia Perdida",     icon:"🗝️", rarity:9, denom:100000,  cps:1500, room:4},
+  {id:"artefacto",  name:"Artefacto Prohibido",  icon:"🕳️", rarity:9, denom:1000000, cps:5000, room:4},
+];
+const ITEM_MAP = Object.fromEntries(ITEMS.map(it=>[it.id,it]));
+
+const ROOMS = [
+  {name:"Vestíbulo Antiguo",       icon:"🏛️"},
+  {name:"Sala Medieval",           icon:"🛡️"},
+  {name:"Sala de Culturas Perdidas", icon:"🗿"},
+  {name:"Sala Cósmica",            icon:"🌌"},
+  {name:"Cámara Secreta",          icon:"🔒"},
+];
+
+const UPGRADES = {
+  luck:      {name:"Suerte",                 icon:"🍀", max:20, base:50,  growth:1.6,  desc:lv=>`+${(lv*8)}% de peso a objetos Raros o superiores.`},
+  discount:  {name:"Descuento en Tiradas",    icon:"💰", max:15, base:40,  growth:1.55, desc:lv=>`-${Math.min(lv*3,45)}% coste de cada tirada.`},
+  income:    {name:"Más Ingresos",            icon:"📈", max:20, base:150, growth:1.65, desc:lv=>`+${lv*8}% monedas de objetos equipados.`},
+  slots:     {name:"Espacios de Equipamiento",icon:"🗄️", max:5,  base:800, growth:3.2,  desc:lv=>`${1+lv} objeto(s) equipable(s) a la vez.`},
+  animSpeed: {name:"Velocidad de Animación",  icon:"⚡", max:8,  base:60,  growth:1.5,  desc:lv=>`Tiradas ${Math.round(lv*8)}% más rápidas.`},
+};
+
+const ACHIEVEMENTS = [
+  {id:"first_item",   name:"Primer Descubrimiento", icon:"🎉", desc:"Descubre tu primer objeto.", reward:20,   cond:s=>Object.keys(s.items).length>=1},
+  {id:"room0",         name:"Sala Completa: Vestíbulo Antiguo", icon:"🏛️", desc:"Completa la sala del Vestíbulo Antiguo.", reward:150, cond:s=>roomComplete(s,0)},
+  {id:"room1",         name:"Sala Completa: Sala Medieval", icon:"🛡️", desc:"Completa la Sala Medieval.", reward:250, cond:s=>roomComplete(s,1)},
+  {id:"room2",         name:"Sala Completa: Culturas Perdidas", icon:"🗿", desc:"Completa la Sala de Culturas Perdidas.", reward:400, cond:s=>roomComplete(s,2)},
+  {id:"room3",         name:"Sala Completa: Sala Cósmica", icon:"🌌", desc:"Completa la Sala Cósmica.", reward:700, cond:s=>roomComplete(s,3)},
+  {id:"room4",         name:"Sala Completa: Cámara Secreta", icon:"🔒", desc:"Completa la Cámara Secreta.", reward:3000, cond:s=>roomComplete(s,4)},
+  {id:"half_museum",  name:"Mitad del Camino",     icon:"🧭", desc:"Descubre 6 objetos distintos.", reward:300,  cond:s=>Object.keys(s.items).length>=6},
+  {id:"full_museum",  name:"Museo Completo",       icon:"👑", desc:"Descubre los 12 objetos del museo.", reward:10000, cond:s=>Object.keys(s.items).length>=12},
+  {id:"get_legendary",name:"Coleccionista Legendario", icon:"✨", desc:"Consigue un objeto Legendario o superior.", reward:100, cond:s=>s.stats.highestRarity>=4},
+  {id:"get_prohibido",name:"Más Allá de lo Permitido", icon:"🔥", desc:"Consigue un objeto Prohibido o superior.", reward:600, cond:s=>s.stats.highestRarity>=7},
+  {id:"get_divino",   name:"Toque Divino",         icon:"⭐", desc:"Consigue un objeto Divino.", reward:3000, cond:s=>s.stats.highestRarity>=9},
+  {id:"rolls_100",    name:"Aprendiz del Azar",    icon:"🎲", desc:"Realiza 100 tiradas.", reward:100,  cond:s=>s.stats.totalRolls>=100},
+  {id:"rolls_1000",   name:"Maestro del Azar",     icon:"🎲", desc:"Realiza 1.000 tiradas.", reward:1500, cond:s=>s.stats.totalRolls>=1000},
+  {id:"rolls_10000",  name:"Leyenda del Azar",     icon:"🎲", desc:"Realiza 10.000 tiradas.", reward:20000, cond:s=>s.stats.totalRolls>=10000},
+  {id:"first_upgrade",name:"Primera Mejora",       icon:"🔧", desc:"Compra tu primera mejora en la tienda.", reward:50, cond:s=>Object.values(s.upgrades).some(l=>l>0)},
+  {id:"max_upgrade",  name:"Al Límite",            icon:"🏅", desc:"Sube una mejora a su nivel máximo.", reward:800, cond:s=>Object.keys(UPGRADES).some(k=>s.upgrades[k]>=UPGRADES[k].max)},
+];
+
+function roomComplete(state, roomIdx){
+  const roomItems = ITEMS.filter(i=>i.room===roomIdx);
+  return roomItems.every(i=>state.items[i.id]);
+}
+
+/* =========================================================
+   STATE
+   ========================================================= */
+const SAVE_KEY = "museumRngSave_v1";
+const DEFAULT_STATE = {
+  coins:0,
+  items:{},          // id -> {count, firstAt}
+  equipped:[],
+  upgrades:{luck:0,discount:0,income:0,slots:0,animSpeed:0},
+  achievements:{},
+  stats:{
+    totalRolls:0, paidRolls:0, coinsEarnedTotal:0, coinsSpentTotal:0,
+    playTimeSeconds:0, highestRarity:-1, mostValuableItemId:null,
+    bestCommonStreak:0, currentCommonStreak:0,
+  },
+  soundOn:true,
+  createdAt:Date.now(),
+};
+
+let state = loadState();
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(!raw) return structuredClone(DEFAULT_STATE);
+    const parsed = JSON.parse(raw);
+    return Object.assign(structuredClone(DEFAULT_STATE), parsed, {
+      upgrades:Object.assign({},DEFAULT_STATE.upgrades,parsed.upgrades),
+      stats:Object.assign({},DEFAULT_STATE.stats,parsed.stats),
+    });
+  }catch(e){
+    console.warn("Save corrupta, empezando de nuevo.",e);
+    return structuredClone(DEFAULT_STATE);
+  }
+}
+function saveState(){
+  localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+}
+
+/* =========================================================
+   AUDIO (WebAudio synth, no external files)
+   ========================================================= */
+let actx=null;
+function ensureAudio(){ if(!actx){ try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){} } }
+function tone(freq,dur,type="sine",gainStart=.18,delay=0){
+  if(!state.soundOn || !actx) return;
+  const t0=actx.currentTime+delay;
+  const osc=actx.createOscillator();
+  const gain=actx.createGain();
+  osc.type=type; osc.frequency.setValueAtTime(freq,t0);
+  gain.gain.setValueAtTime(0,t0);
+  gain.gain.linearRampToValueAtTime(gainStart,t0+0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+  osc.connect(gain).connect(actx.destination);
+  osc.start(t0); osc.stop(t0+dur+0.05);
+}
+function sfxRoll(){ tone(220,.12,"square",.08); tone(330,.1,"square",.06,.05); }
+function sfxBuy(){ tone(500,.1,"triangle",.15); tone(700,.12,"triangle",.12,.06); }
+function sfxAchievement(){ tone(660,.15,"triangle",.16); tone(880,.18,"triangle",.14,.1); tone(1100,.22,"triangle",.12,.2); }
+function sfxResult(rarity){
+  if(rarity<=1){ tone(440,.15,"sine",.15); }
+  else if(rarity<=3){ tone(523,.14,"sine",.15); tone(659,.16,"sine",.13,.08); }
+  else if(rarity<=5){ tone(392,.12,"triangle",.15); tone(523,.14,"triangle",.14,.07); tone(784,.2,"triangle",.13,.14); }
+  else if(rarity<=7){ tone(330,.15,"sawtooth",.12); tone(440,.15,"sawtooth",.12,.08); tone(660,.18,"sawtooth",.12,.16); tone(880,.25,"sawtooth",.12,.24); }
+  else { // secreto/divino - triumphant arpeggio
+    [261,329,392,523,659,784,1046].forEach((f,i)=>tone(f,.35,"triangle",.15,i*.09));
+  }
+}
+
+/* =========================================================
+   ECONOMY HELPERS
+   ========================================================= */
+function upgradeCost(key){
+  const u=UPGRADES[key];
+  const lv=state.upgrades[key];
+  if(lv>=u.max) return null;
+  return Math.round(u.base*Math.pow(u.growth,lv));
+}
+function rollCost(){
+  if(state.stats.totalRolls===0) return 0;
+  const paid = state.stats.paidRolls;
+  let cost = 5*Math.pow(1.12,paid);
+  const discountLv = state.upgrades.discount;
+  const discountMult = 1 - Math.min(discountLv*0.03,0.45);
+  cost *= discountMult;
+  return Math.max(1,Math.round(cost));
+}
+function maxSlots(){ return 1+state.upgrades.slots; }
+function incomeMultiplier(){ return 1+state.upgrades.income*0.08; }
+function totalCps(){
+  let sum=0;
+  state.equipped.forEach(id=>{ const it=ITEM_MAP[id]; if(it) sum+=it.cps; });
+  return Math.round(sum*incomeMultiplier()*10)/10;
+}
+function luckWeight(item){
+  let w = 1/item.denom;
+  if(item.rarity>=2){
+    w *= (1+state.upgrades.luck*0.08);
+  }
+  return w;
+}
+function weightedRollItem(){
+  const weights = ITEMS.map(it=>luckWeight(it));
+  const total = weights.reduce((a,b)=>a+b,0);
+  let r = Math.random()*total;
+  for(let i=0;i<ITEMS.length;i++){
+    r -= weights[i];
+    if(r<=0) return ITEMS[i];
+  }
+  return ITEMS[ITEMS.length-1];
+}
+function normalizedProbPercent(item){
+  const weights = ITEMS.map(it=>luckWeight(it));
+  const total = weights.reduce((a,b)=>a+b,0);
+  return (luckWeight(item)/total*100);
+}
+
+/* =========================================================
+   FORMATTING
+   ========================================================= */
+function fmt(n){
+  n = Math.floor(n);
+  if(n<1000) return n.toLocaleString("es-ES");
+  const units=[{v:1e12,s:"T"},{v:1e9,s:"B"},{v:1e6,s:"M"},{v:1e3,s:"K"}];
+  for(const u of units){ if(n>=u.v) return (n/u.v).toFixed(2).replace(/\.00$/,"")+u.s; }
+  return n.toLocaleString("es-ES");
+}
+function fmtDenom(n){ return "1 entre "+n.toLocaleString("es-ES"); }
+function fmtTime(sec){
+  sec=Math.floor(sec);
+  const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60), s=sec%60;
+  return `${h}h ${m}m ${s}s`;
+}
+function fmtDate(ts){
+  if(!ts) return "-";
+  const d=new Date(ts);
+  return d.toLocaleDateString("es-ES",{day:"2-digit",month:"short",year:"numeric"});
+}
+
+/* =========================================================
+   RENDER: TOP BAR
+   ========================================================= */
+function renderTop(){
+  document.getElementById("coinCount").textContent = fmt(state.coins);
+  document.getElementById("cpsCount").textContent = fmt(totalCps());
+}
+
+/* =========================================================
+   TOASTS
+   ========================================================= */
+function toast(html){
+  const c=document.getElementById("toastContainer");
+  const el=document.createElement("div");
+  el.className="toast";
+  el.innerHTML=html;
+  c.appendChild(el);
+  setTimeout(()=>el.remove(),3900);
+}
+
+/* =========================================================
+   ROLL LOGIC
+   ========================================================= */
+const rollBtn=document.getElementById("rollBtn");
+const rollCostLabel=document.getElementById("rollCostLabel");
+const rollHint=document.getElementById("rollHint");
+const reelTrack=document.getElementById("reelTrack");
+let rolling=false;
+
+function animDuration(){
+  const lv=state.upgrades.animSpeed;
+  const factor = Math.max(0.35, 1-lv*0.08);
+  return (2.3*factor).toFixed(2);
+}
+
+function updateRollButton(){
+  const cost=rollCost();
+  if(state.stats.totalRolls===0){
+    rollCostLabel.textContent="Gratis";
+    rollHint.textContent="Tu primera tirada es gratuita. ¡Pruébala!";
+  } else {
+    rollCostLabel.textContent=fmt(cost)+" monedas";
+    rollHint.textContent = state.coins<cost ? "No tienes monedas suficientes para tirar." : "Cada tirada revela un objeto para tu museo.";
+  }
+  rollBtn.disabled = rolling || (state.stats.totalRolls>0 && state.coins<cost);
+}
+
+function buildReel(finalItem){
+  reelTrack.innerHTML="";
+  reelTrack.style.transition="none";
+  reelTrack.style.transform="translateX(0)";
+  const totalCells=46;
+  const targetIndex=40;
+  const pool=ITEMS;
+  for(let i=0;i<totalCells;i++){
+    const cell=document.createElement("div");
+    cell.className="reel-cell";
+    const it = (i===targetIndex) ? finalItem : pool[Math.floor(Math.random()*pool.length)];
+    cell.textContent=it.icon;
+    cell.style.borderColor = i===targetIndex ? "transparent" : "";
+    reelTrack.appendChild(cell);
+  }
+  return targetIndex;
+}
+
+function doRoll(){
+  if(rolling) return;
+  ensureAudio();
+  const cost=rollCost();
+  if(state.stats.totalRolls>0 && state.coins<cost) return;
+
+  rolling=true;
+  updateRollButton();
+
+  if(state.stats.totalRolls>0){
+    state.coins-=cost;
+    state.stats.coinsSpentTotal+=cost;
+    state.stats.paidRolls++;
+  }
+  state.stats.totalRolls++;
+
+  const won = weightedRollItem();
+  const isNew = !state.items[won.id];
+  if(!state.items[won.id]) state.items[won.id]={count:0,firstAt:Date.now()};
+  state.items[won.id].count++;
+
+  if(won.rarity>state.stats.highestRarity) state.stats.highestRarity=won.rarity;
+  const currentMostValuable = state.stats.mostValuableItemId ? ITEM_MAP[state.stats.mostValuableItemId] : null;
+  if(!currentMostValuable || won.cps>currentMostValuable.cps) state.stats.mostValuableItemId=won.id;
+  if(won.rarity<=0){
+    state.stats.currentCommonStreak++;
+    if(state.stats.currentCommonStreak>state.stats.bestCommonStreak) state.stats.bestCommonStreak=state.stats.currentCommonStreak;
+  } else {
+    state.stats.currentCommonStreak=0;
+  }
+
+  document.documentElement.style.setProperty("--anim-dur", animDuration()+"s");
+  const targetIndex=buildReel(won);
+  const viewport=reelTrack.parentElement;
+  requestAnimationFrame(()=>{
+    const cellW=110+10;
+    const viewportW=viewport.getBoundingClientRect().width;
+    const offset = -(targetIndex*cellW + cellW/2 - viewportW/2);
+    reelTrack.style.transition=`transform ${animDuration()}s cubic-bezier(.1,.85,.25,1)`;
+    reelTrack.style.transform=`translateX(${offset}px)`;
+    sfxRoll();
+  });
+
+  const durMs=parseFloat(animDuration())*1000;
+  setTimeout(()=>{
+    finishRoll(won,isNew);
+  },durMs+120);
+}
+
+function finishRoll(won,isNew){
+  rolling=false;
+  const cells=reelTrack.querySelectorAll(".reel-cell");
+  if(cells[40]) cells[40].classList.add("landing");
+
+  sfxResult(won.rarity);
+  if(won.rarity>=4) screenShake();
+  if(won.rarity>=6) flashScreen();
+  if(won.rarity>=4) burstParticles(won.rarity);
+
+  showResultCard(won,isNew);
+  addRecentPull(won);
+  updateEquippedBar();
+  renderTop();
+  updateRollButton();
+  checkAchievements();
+  saveState();
+  renderMuseum();
+  renderCollection();
+  renderStats();
+}
+
+function screenShake(){
+  const app=document.getElementById("app");
+  app.classList.remove("shake"); void app.offsetWidth; app.classList.add("shake");
+}
+function flashScreen(){
+  const f=document.getElementById("flashOverlay");
+  f.classList.remove("flash"); void f.offsetWidth; f.classList.add("flash");
+}
+
+function showResultCard(item,isNew){
+  const rar=RARITIES[item.rarity];
+  const card=document.getElementById("resultCard");
+  card.style.setProperty("--rc",rar.color);
+  card.style.setProperty("--rcg",rar.glow);
+  document.getElementById("resultIcon").textContent=item.icon;
+  document.getElementById("resultRarity").textContent=rar.name;
+  document.getElementById("resultRarity").style.color=rar.color;
+  document.getElementById("resultName").textContent=item.name;
+  document.getElementById("resultProb").textContent="🎯 "+fmtDenom(item.denom);
+  document.getElementById("resultCps").textContent="⚡ +"+fmt(item.cps)+"/s";
+  document.getElementById("resultNewBadge").style.display = isNew ? "inline-block" : "none";
+  document.getElementById("resultOverlay").classList.add("show");
+}
+document.getElementById("resultClose").addEventListener("click",()=>{
+  document.getElementById("resultOverlay").classList.remove("show");
+});
+document.getElementById("resultOverlay").addEventListener("click",(e)=>{
+  if(e.target.id==="resultOverlay") document.getElementById("resultOverlay").classList.remove("show");
+});
+
+const recentPullsEl=document.getElementById("recentPulls");
+let recentPullsData=[];
+function addRecentPull(item){
+  recentPullsData.unshift(item);
+  recentPullsData=recentPullsData.slice(0,14);
+  recentPullsEl.innerHTML=recentPullsData.map(it=>{
+    const rar=RARITIES[it.rarity];
+    return `<div class="recent-chip" title="${it.name} (${rar.name})" style="border-color:${rar.color};box-shadow:0 0 8px -2px ${rar.glow};">${it.icon}</div>`;
+  }).join("");
+}
+
+function updateEquippedBar(){
+  const bar=document.getElementById("equippedBar");
+  const slots=maxSlots();
+  let html="";
+  for(let i=0;i<slots;i++){
+    const id=state.equipped[i];
+    if(id){
+      const it=ITEM_MAP[id]; const rar=RARITIES[it.rarity];
+      html+=`<div class="equip-slot filled" style="border-color:${rar.color};" title="${it.name}">${it.icon}<span class="mini-cps">+${fmt(it.cps)}/s</span></div>`;
+    } else {
+      html+=`<div class="equip-slot">➕</div>`;
+    }
+  }
+  bar.innerHTML=html;
+}
+
+rollBtn.addEventListener("click",doRoll);
+
+/* =========================================================
+   RENDER: MUSEUM
+   ========================================================= */
+function renderMuseum(){
+  const container=document.getElementById("roomsContainer");
+  container.innerHTML = ROOMS.map((room,ri)=>{
+    const roomItems = ITEMS.filter(i=>i.room===ri);
+    const discoveredCount = roomItems.filter(i=>state.items[i.id]).length;
+    const pct = Math.round(discoveredCount/roomItems.length*100);
+    const cards = roomItems.map(itemCardHtml).join("");
+    return `<div class="room">
+      <div class="room-header">
+        <div class="room-title">${room.icon} ${room.name}</div>
+        <div class="room-progress">${discoveredCount}/${roomItems.length}</div>
+      </div>
+      <div class="room-bar"><div class="room-bar-fill" style="width:${pct}%;"></div></div>
+      <div class="item-grid" style="margin-top:12px;">${cards}</div>
+    </div>`;
+  }).join("");
+  container.querySelectorAll(".item-card[data-id]").forEach(card=>{
+    card.addEventListener("click",()=>toggleEquip(card.dataset.id));
+  });
+}
+function itemCardHtml(item){
+  const owned=state.items[item.id];
+  const rar=RARITIES[item.rarity];
+  const isEq=state.equipped.includes(item.id);
+  if(!owned){
+    return `<div class="item-card locked">
+      <div class="icon">❔</div>
+      <div class="iname">???</div>
+      <div class="irar" style="color:var(--text-2);">${rar.name}</div>
+      <div class="icount">${fmtDenom(item.denom)}</div>
+    </div>`;
+  }
+  return `<div class="item-card discovered ${isEq?"equipped":""}" data-id="${item.id}" style="--ic:${rar.color};--icg:${rar.glow};">
+    ${isEq?'<div class="badge-eq">⭐</div>':""}
+    <div class="icon">${item.icon}</div>
+    <div class="iname">${item.name}</div>
+    <div class="irar" style="color:${rar.color};">${rar.name}</div>
+    <div class="icount">x${owned.count} · +${fmt(item.cps)}/s</div>
+  </div>`;
+}
+function toggleEquip(id){
+  if(!state.items[id]) return;
+  const idx=state.equipped.indexOf(id);
+  if(idx>=0){
+    state.equipped.splice(idx,1);
+  } else {
+    if(state.equipped.length>=maxSlots()){
+      toast(`⚠️ No tienes más espacios de equipamiento. Cómpralos en la tienda.`);
+      return;
+    }
+    state.equipped.push(id);
+  }
+  updateEquippedBar();
+  renderTop();
+  renderMuseum();
+  saveState();
+}
+
+/* =========================================================
+   RENDER: SHOP
+   ========================================================= */
+function renderShop(){
+  const grid=document.getElementById("shopGrid");
+  grid.innerHTML=Object.keys(UPGRADES).map(key=>{
+    const u=UPGRADES[key];
+    const lv=state.upgrades[key];
+    const cost=upgradeCost(key);
+    const pct=Math.round(lv/u.max*100);
+    return `<div class="upg-card">
+      <div class="upg-head">
+        <div class="upg-icon">${u.icon}</div>
+        <div>
+          <div class="upg-name">${u.name}</div>
+          <div class="upg-level">Nivel ${lv} / ${u.max}</div>
+        </div>
+      </div>
+      <div class="upg-desc">${u.desc(lv)}</div>
+      <div class="upg-bar"><div class="upg-bar-fill" style="width:${pct}%;"></div></div>
+      <button class="buy-btn" data-key="${key}" ${cost===null || state.coins<cost ? "disabled":""}>
+        ${cost===null ? "NIVEL MÁXIMO" : "Comprar · 🪙 "+fmt(cost)}
+      </button>
+    </div>`;
+  }).join("");
+  grid.querySelectorAll(".buy-btn").forEach(btn=>{
+    btn.addEventListener("click",()=>buyUpgrade(btn.dataset.key));
+  });
+}
+function buyUpgrade(key){
+  const cost=upgradeCost(key);
+  if(cost===null || state.coins<cost) return;
+  state.coins-=cost;
+  state.stats.coinsSpentTotal+=cost;
+  state.upgrades[key]++;
+  ensureAudio(); sfxBuy();
+  toast(`🔧 <b>${UPGRADES[key].name}</b> mejorado a nivel ${state.upgrades[key]}`);
+  renderShop();
+  renderTop();
+  updateRollButton();
+  updateEquippedBar();
+  checkAchievements();
+  saveState();
+}
+
+/* =========================================================
+   RENDER: COLLECTION
+   ========================================================= */
+function renderCollection(){
+  const body=document.getElementById("collectionBody");
+  body.innerHTML=ITEMS.map(item=>{
+    const owned=state.items[item.id];
+    const rar=RARITIES[item.rarity];
+    const prob = normalizedProbPercent(item);
+    if(!owned){
+      return `<tr style="opacity:.55;">
+        <td>❔</td><td>???</td>
+        <td><span class="rar-pill" style="background:${rar.glow};color:#0a0a12;">${rar.name}</span></td>
+        <td>${fmtDenom(item.denom)}</td><td>-</td><td>0</td><td>-</td>
+      </tr>`;
+    }
+    return `<tr>
+      <td style="font-size:1.3rem;">${item.icon}</td>
+      <td><b>${item.name}</b></td>
+      <td><span class="rar-pill" style="background:${rar.glow};color:#0a0a12;">${rar.name}</span></td>
+      <td>${fmtDenom(item.denom)} <span class="subtle">(${prob.toFixed(prob<0.01?4:2)}%)</span></td>
+      <td>+${fmt(item.cps)}/s</td>
+      <td>${owned.count}</td>
+      <td>${fmtDate(owned.firstAt)}</td>
+    </tr>`;
+  }).join("");
+}
+
+/* =========================================================
+   RENDER: ACHIEVEMENTS
+   ========================================================= */
+function renderAchievements(){
+  const grid=document.getElementById("achGrid");
+  grid.innerHTML=ACHIEVEMENTS.map(a=>{
+    const unlocked=!!state.achievements[a.id];
+    return `<div class="ach-card ${unlocked?"unlocked":""}">
+      <div class="ach-icon">${unlocked?a.icon:"🔒"}</div>
+      <div>
+        <div class="ach-name">${a.name}</div>
+        <div class="ach-desc">${a.desc}</div>
+        <div class="ach-reward">🪙 Recompensa: ${fmt(a.reward)}</div>
+      </div>
+    </div>`;
+  }).join("");
+}
+function checkAchievements(){
+  let any=false;
+  ACHIEVEMENTS.forEach(a=>{
+    if(!state.achievements[a.id] && a.cond(state)){
+      state.achievements[a.id]=Date.now();
+      state.coins+=a.reward;
+      ensureAudio(); sfxAchievement();
+      toast(`🏆 Logro desbloqueado: <b>${a.name}</b><br>+${fmt(a.reward)} monedas`);
+      any=true;
+    }
+  });
+  if(any){ renderAchievements(); renderTop(); }
+}
+
+/* =========================================================
+   RENDER: STATS
+   ========================================================= */
+function renderStats(){
+  const grid=document.getElementById("statGrid");
+  const discovered=Object.keys(state.items).length;
+  const mostVal = state.stats.mostValuableItemId ? ITEM_MAP[state.stats.mostValuableItemId] : null;
+  const highestRar = state.stats.highestRarity>=0 ? RARITIES[state.stats.highestRarity].name : "-";
+  const cards=[
+    ["🎲 Tiradas realizadas", fmt(state.stats.totalRolls)],
+    ["🏺 Objetos descubiertos", `${discovered}/${ITEMS.length}`],
+    ["✨ Rareza más alta", highestRar],
+    ["💰 Monedas generadas", fmt(state.stats.coinsEarnedTotal)],
+    ["🛍️ Monedas gastadas", fmt(state.stats.coinsSpentTotal)],
+    ["⏱️ Tiempo jugado", fmtTime(state.stats.playTimeSeconds)],
+    ["🔥 Mejor racha común", fmt(state.stats.bestCommonStreak)],
+    ["💎 Objeto más valioso", mostVal ? `${mostVal.icon} ${mostVal.name}` : "-"],
+    ["🏆 Logros", `${Object.keys(state.achievements).length}/${ACHIEVEMENTS.length}`],
+  ];
+  grid.innerHTML=cards.map(([lab,val])=>`<div class="stat-card"><div class="stat-val">${val}</div><div class="stat-lab">${lab}</div></div>`).join("");
+}
+
+/* =========================================================
+   PARTICLES
+   ========================================================= */
+const pCanvas=document.getElementById("particleCanvas");
+const pCtx=pCanvas.getContext("2d");
+function resizeCanvas(){ pCanvas.width=window.innerWidth; pCanvas.height=window.innerHeight; }
+window.addEventListener("resize",resizeCanvas); resizeCanvas();
+let particles=[];
+function burstParticles(rarity){
+  const rar=RARITIES[rarity];
+  const count = rarity>=8 ? 140 : rarity>=6 ? 80 : 40;
+  const cx=pCanvas.width/2, cy=pCanvas.height*0.4;
+  for(let i=0;i<count;i++){
+    const ang=Math.random()*Math.PI*2;
+    const speed=2+Math.random()*6;
+    particles.push({
+      x:cx,y:cy,
+      vx:Math.cos(ang)*speed, vy:Math.sin(ang)*speed-2,
+      life:1, color:rar.color, size:3+Math.random()*4,
+    });
+  }
+}
+function animateParticles(){
+  pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);
+  particles.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.12; p.life-=0.014;
+    pCtx.globalAlpha=Math.max(p.life,0);
+    pCtx.fillStyle=p.color;
+    pCtx.fillRect(p.x,p.y,p.size,p.size);
+  });
+  particles=particles.filter(p=>p.life>0);
+  pCtx.globalAlpha=1;
+  requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+/* starfield background */
+const sCanvas=document.getElementById("starfield");
+const sCtx=sCanvas.getContext("2d");
+function resizeStars(){ sCanvas.width=window.innerWidth; sCanvas.height=window.innerHeight; }
+window.addEventListener("resize",resizeStars); resizeStars();
+const stars=Array.from({length:120},()=>({
+  x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,
+  r:Math.random()*1.4+0.2, s:Math.random()*0.02+0.005, phase:Math.random()*Math.PI*2,
+}));
+function animateStars(t){
+  sCtx.clearRect(0,0,sCanvas.width,sCanvas.height);
+  stars.forEach(st=>{
+    const alpha=0.35+0.5*Math.sin(t*st.s+st.phase);
+    sCtx.globalAlpha=Math.max(alpha,0.05);
+    sCtx.fillStyle="#cdd8ff";
+    sCtx.beginPath(); sCtx.arc(st.x,st.y,st.r,0,7); sCtx.fill();
+  });
+  sCtx.globalAlpha=1;
+  requestAnimationFrame(animateStars);
+}
+requestAnimationFrame(animateStars);
+
+/* =========================================================
+   TABS
+   ========================================================= */
+document.getElementById("tabs").addEventListener("click",(e)=>{
+  const btn=e.target.closest(".tab-btn");
+  if(!btn) return;
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  const tab=btn.dataset.tab;
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.getElementById("view-"+tab).classList.add("active");
+});
+
+/* =========================================================
+   SOUND TOGGLE
+   ========================================================= */
+const soundToggle=document.getElementById("soundToggle");
+function renderSoundToggle(){ soundToggle.textContent = state.soundOn ? "🔊" : "🔇"; }
+soundToggle.addEventListener("click",()=>{
+  state.soundOn=!state.soundOn;
+  renderSoundToggle();
+  ensureAudio();
+  saveState();
+});
+
+/* =========================================================
+   RESET
+   ========================================================= */
+document.getElementById("resetBtn").addEventListener("click",()=>{
+  if(!confirm("¿Seguro que quieres reiniciar todo tu progreso? Esta acción no se puede deshacer.")) return;
+  if(!confirm("Última confirmación: se borrará tu museo completo. ¿Continuar?")) return;
+  localStorage.removeItem(SAVE_KEY);
+  state=structuredClone(DEFAULT_STATE);
+  recentPullsData=[];
+  fullRender();
+});
+
+/* =========================================================
+   GAME LOOP (income tick + autosave)
+   ========================================================= */
+setInterval(()=>{
+  const income=totalCps();
+  if(income>0){
+    state.coins+=income;
+    state.stats.coinsEarnedTotal+=income;
+  }
+  state.stats.playTimeSeconds++;
+  renderTop();
+  updateRollButton();
+},1000);
+
+setInterval(saveState,10000);
+window.addEventListener("beforeunload",saveState);
+document.addEventListener("visibilitychange",()=>{ if(document.hidden) saveState(); });
+
+/* =========================================================
+   INIT
+   ========================================================= */
+function fullRender(){
+  renderTop();
+  renderSoundToggle();
+  updateRollButton();
+  updateEquippedBar();
+  renderMuseum();
+  renderShop();
+  renderCollection();
+  renderAchievements();
+  renderStats();
+  buildReel(ITEMS[0]);
+}
+fullRender();
+
+})();
+</script>
+</body>
+</html>

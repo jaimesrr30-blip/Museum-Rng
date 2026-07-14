@@ -192,8 +192,29 @@ h2.section-title{
 }
 .recent-chip:hover{transform:translateY(-3px) scale(1.1);}
 
+/* ---------- evento del día ---------- */
+.event-banner{
+  display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;margin-bottom:14px;
+  background:var(--panel-light);border:1.5px solid var(--ic,var(--border-strong));
+  box-shadow:0 0 20px -6px var(--icg,transparent);
+}
+.event-icon{font-size:1.8rem;filter:drop-shadow(0 0 8px var(--icg,transparent));}
+.event-info{flex:1;min-width:0;}
+.event-title{font-weight:800;font-size:.85rem;}
+.event-countdown{font-size:.72rem;color:var(--text-2);white-space:nowrap;}
+
+/* ---------- pity ---------- */
+.pity-wrap{max-width:420px;margin:18px auto 0;}
+.pity-bar{height:8px;border-radius:5px;background:var(--panel-light);overflow:hidden;border:1px solid var(--border);}
+.pity-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .4s ease;}
+.pity-bar.pity-hot .pity-bar-fill,.pity-bar-fill.pity-hot{background:linear-gradient(90deg,#f472b6,var(--gold));}
+.pity-bar-fill.pity-hot{animation:pityGlow 1.2s ease-in-out infinite;}
+@keyframes pityGlow{0%,100%{filter:brightness(1);}50%{filter:brightness(1.4);}}
+.pity-label{text-align:center;font-size:.72rem;color:var(--text-2);margin-top:6px;}
+
 /* ---------- shake / screen effects ---------- */
 .shake{animation:shakeAnim .4s ease;}
+.shake-strong{animation:shakeStrongAnim .7s ease;}
 @keyframes shakeAnim{
   0%,100%{transform:translateX(0);}
   20%{transform:translateX(-8px) rotate(-.5deg);}
@@ -201,9 +222,41 @@ h2.section-title{
   60%{transform:translateX(-5px);}
   80%{transform:translateX(4px);}
 }
+@keyframes shakeStrongAnim{
+  0%,100%{transform:translate(0,0) rotate(0);}
+  10%{transform:translate(-10px,3px) rotate(-.7deg);}
+  25%{transform:translate(9px,-4px) rotate(.7deg);}
+  40%{transform:translate(-8px,4px) rotate(-.5deg);}
+  55%{transform:translate(7px,-3px) rotate(.5deg);}
+  70%{transform:translate(-5px,2px) rotate(-.3deg);}
+  85%{transform:translate(4px,-2px) rotate(.3deg);}
+}
 #flashOverlay{position:fixed;inset:0;z-index:55;pointer-events:none;opacity:0;background:radial-gradient(circle,#fff,transparent 70%);}
 #flashOverlay.flash{animation:flashAnim .6s ease;}
 @keyframes flashAnim{0%{opacity:0;}15%{opacity:.85;}100%{opacity:0;}}
+
+/* ---------- suspense épico (secreto/divino) ---------- */
+#epicVignette{
+  position:fixed;inset:0;z-index:50;pointer-events:none;opacity:0;
+  background:
+    radial-gradient(ellipse at 50% 38%, transparent 15%, rgba(2,2,8,.55) 55%, rgba(2,2,8,.88) 100%);
+  transition:opacity .5s ease;
+}
+#epicVignette.show{opacity:1;animation:epicVignettePulse 1.6s ease-in-out infinite;}
+#epicVignette::before{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(circle at 50% 38%, var(--rcg,rgba(251,191,36,.5)) 0%, transparent 40%);
+  mix-blend-mode:screen;
+}
+@keyframes epicVignettePulse{0%,100%{opacity:.85;}50%{opacity:1;}}
+.reel-viewport.epic-suspense{
+  animation:epicZoom 1.4s ease-in-out infinite;
+  box-shadow:inset 0 0 40px rgba(0,0,0,.6), 0 0 40px 6px var(--gold);
+}
+@keyframes epicZoom{
+  0%,100%{transform:scale(1);}
+  50%{transform:scale(1.035);}
+}
 
 /* ---------- result modal ---------- */
 #resultOverlay{
@@ -212,6 +265,7 @@ h2.section-title{
 }
 #resultOverlay.show{display:flex;}
 .result-card{
+  position:relative;
   width:min(360px,88vw);border-radius:20px;padding:30px 24px 24px;text-align:center;
   background:linear-gradient(160deg,var(--panel),var(--panel-light));
   border:2px solid var(--rc,var(--r0));
@@ -219,6 +273,21 @@ h2.section-title{
   animation:resultPop .45s cubic-bezier(.2,.9,.3,1.3);
 }
 @keyframes resultPop{from{transform:scale(.6);opacity:0;}to{transform:scale(1);opacity:1;}}
+.result-card.epic::before{
+  content:"";position:absolute;inset:-3px;border-radius:24px;z-index:-1;
+  background:conic-gradient(from 0deg,
+    var(--rc,var(--gold)) 0deg, transparent 45deg, transparent 135deg, var(--rc,var(--gold)) 180deg,
+    transparent 225deg, transparent 315deg, var(--rc,var(--gold)) 360deg);
+  animation:epicRingSpin 4s linear infinite;
+  filter:blur(9px);
+  opacity:.85;
+}
+@keyframes epicRingSpin{to{transform:rotate(360deg);}}
+.result-card.epic{animation:resultPop .45s cubic-bezier(.2,.9,.3,1.3), epicCardPulse 1.6s ease-in-out infinite .45s;}
+@keyframes epicCardPulse{
+  0%,100%{box-shadow:0 0 60px var(--rcg,var(--r0g)), 0 20px 50px rgba(0,0,0,.5);}
+  50%{box-shadow:0 0 90px var(--rcg,var(--r0g)), 0 20px 60px rgba(0,0,0,.6);}
+}
 .result-icon{font-size:4rem;margin-bottom:8px;filter:drop-shadow(0 0 18px var(--rcg,var(--r0g)));animation:iconFloat 2s ease-in-out infinite;}
 @keyframes iconFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
 .result-rarity{font-weight:800;letter-spacing:1.5px;text-transform:uppercase;font-size:.78rem;color:var(--rc,var(--r0));margin-bottom:4px;text-shadow:0 0 14px currentColor;}
@@ -232,6 +301,14 @@ h2.section-title{
 }
 .result-close:hover{border-color:var(--rc,var(--accent));box-shadow:0 0 18px -2px var(--rcg,rgba(124,157,255,.55));transform:translateY(-2px);}
 .result-close:active{transform:translateY(0);}
+
+/* ---------- modal offline ---------- */
+#offlineOverlay{
+  position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;
+  background:rgba(4,6,14,.65);backdrop-filter:blur(4px);
+}
+#offlineOverlay.show{display:flex;}
+.offline-card{border-color:var(--gold);box-shadow:0 0 60px rgba(243,198,92,.4),0 20px 50px rgba(0,0,0,.5);}
 
 /* ---------- museum ---------- */
 .rooms{display:flex;flex-direction:column;gap:18px;}
@@ -258,6 +335,10 @@ h2.section-title{
 .item-card .irar{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;text-shadow:0 0 8px currentColor;}
 .item-card .icount{font-size:.66rem;color:var(--text-2);margin-top:4px;}
 .item-card .badge-eq{position:absolute;top:6px;right:6px;font-size:.85rem;}
+.item-card .badge-evt{
+  position:absolute;top:6px;left:6px;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:999px;
+  background:rgba(192,132,252,.25);color:#e9d5ff;border:1px solid rgba(192,132,252,.5);white-space:nowrap;
+}
 .item-card.locked{cursor:default;opacity:.75;}
 
 /* rarezas altas: brillo pulsante creciente */
@@ -366,6 +447,7 @@ footer.foot{text-align:center;color:var(--text-2);font-size:.72rem;margin-top:30
 <canvas id="starfield"></canvas>
 <canvas id="particleCanvas"></canvas>
 <div id="flashOverlay"></div>
+<div id="epicVignette"></div>
 
 <div class="app" id="app">
   <header class="topbar" id="topbar">
@@ -380,6 +462,8 @@ footer.foot{text-align:center;color:var(--text-2);font-size:.72rem;margin-top:30
       <button class="tab-btn" data-tab="museum">🏛️ Museo</button>
       <button class="tab-btn" data-tab="shop">🛒 Tienda</button>
       <button class="tab-btn" data-tab="collection">📖 Colección</button>
+      <button class="tab-btn" data-tab="missions">🗓️ Misiones</button>
+      <button class="tab-btn" data-tab="prestige">🌌 Legado</button>
       <button class="tab-btn" data-tab="achievements">🏆 Logros</button>
       <button class="tab-btn" data-tab="stats">📊 Estadísticas</button>
     </nav>
@@ -390,6 +474,7 @@ footer.foot{text-align:center;color:var(--text-2);font-size:.72rem;margin-top:30
     <section class="view active" id="view-roll">
       <div class="panel roll-layout">
         <h2 class="section-title">🎰 Sala de Tiradas</h2>
+        <div class="event-banner" id="eventBanner"></div>
         <div class="reel-wrap">
           <div class="reel-viewport">
             <div class="reel-track" id="reelTrack"></div>
@@ -399,6 +484,10 @@ footer.foot{text-align:center;color:var(--text-2);font-size:.72rem;margin-top:30
         <div class="roll-controls">
           <button class="roll-btn" id="rollBtn">TIRAR<small id="rollCostLabel">Gratis</small></button>
           <div class="roll-hint" id="rollHint">Tu primera tirada es gratuita. ¡Pruébala!</div>
+        </div>
+        <div class="pity-wrap">
+          <div class="pity-bar"><div class="pity-bar-fill" id="pityBarFill"></div></div>
+          <div class="pity-label" id="pityLabel">Racha sin Épico+: 0/90</div>
         </div>
         <div class="equipped-bar" id="equippedBar"></div>
         <div class="recent-pulls" id="recentPulls"></div>
@@ -430,6 +519,24 @@ footer.foot{text-align:center;color:var(--text-2);font-size:.72rem;margin-top:30
             <tbody id="collectionBody"></tbody>
           </table>
         </div>
+      </div>
+    </section>
+
+    <!-- MISSIONS VIEW -->
+    <section class="view" id="view-missions">
+      <div class="panel">
+        <h2 class="section-title">🗓️ Misiones Diarias</h2>
+        <div class="subtle" id="missionsCountdown" style="margin-bottom:14px;">Nuevas misiones en --</div>
+        <div class="ach-grid" id="missionsGrid"></div>
+      </div>
+    </section>
+
+    <!-- PRESTIGE VIEW -->
+    <section class="view" id="view-prestige">
+      <div class="panel">
+        <h2 class="section-title">🌌 Legado</h2>
+        <p class="subtle" style="margin-top:-8px;margin-bottom:16px;">Renace para reiniciar el coste de tus tiradas y la tienda a cambio de Fragmentos de Legado permanentes. Tu museo, tus objetos equipados y tus logros nunca se pierden.</p>
+        <div id="prestigeInfo"></div>
       </div>
     </section>
 
@@ -471,6 +578,18 @@ footer.foot{text-align:center;color:var(--text-2);font-size:.72rem;margin-top:30
       <span id="resultCps"></span>
     </div>
     <button class="result-close" id="resultClose">Continuar</button>
+  </div>
+</div>
+
+<div id="offlineOverlay">
+  <div class="result-card offline-card">
+    <div class="result-icon">🏛️</div>
+    <div class="result-name">¡Bienvenido de vuelta!</div>
+    <div class="result-meta" style="flex-direction:column;gap:6px;">
+      <span id="offlineTime"></span>
+      <span id="offlineCoins" style="font-size:1.3rem;font-weight:800;color:var(--gold);text-shadow:0 0 14px rgba(243,198,92,.6);"></span>
+    </div>
+    <button class="result-close" id="offlineClose">Recoger</button>
   </div>
 </div>
 
@@ -553,7 +672,14 @@ const ITEMS = [
   {id:"corona_cosmica",  name:"Corona Cósmica",          icon:"🌟", rarity:9, denom:300000, cps:2500, room:4},
   {id:"ojo_infinito",    name:"Ojo del Infinito",        icon:"👁️", rarity:9, denom:500000, cps:3500, room:4},
 ];
-const ITEM_MAP = Object.fromEntries(ITEMS.map(it=>[it.id,it]));
+const EVENT_ITEMS = [
+  {id:"evt_sol",      name:"Reliquia del Sol",      icon:"☀️", rarity:6, denom:500,  cps:80,  room:5, event:true},
+  {id:"evt_luna",     name:"Reliquia de la Luna",   icon:"🌙", rarity:6, denom:500,  cps:80,  room:5, event:true},
+  {id:"evt_tormenta", name:"Núcleo de Tormenta",    icon:"🌩️", rarity:7, denom:1200, cps:150, room:5, event:true},
+  {id:"evt_arcoiris", name:"Cristal Arcoíris",      icon:"🌈", rarity:5, denom:280,  cps:40,  room:5, event:true},
+];
+const ALL_ITEMS = ITEMS.concat(EVENT_ITEMS);
+const ITEM_MAP = Object.fromEntries(ALL_ITEMS.map(it=>[it.id,it]));
 
 const ROOMS = [
   {name:"Vestíbulo Antiguo",       icon:"🏛️"},
@@ -561,7 +687,17 @@ const ROOMS = [
   {name:"Sala de Culturas Perdidas", icon:"🗿"},
   {name:"Sala Cósmica",            icon:"🌌"},
   {name:"Cámara Secreta",          icon:"🔒"},
+  {name:"Sala de Eventos",         icon:"🎪"},
 ];
+
+/* --- evento rotativo diario --- */
+function todayIndex(){ return Math.floor(Date.now()/86400000); }
+function getActiveEventItem(){ return EVENT_ITEMS[todayIndex()%EVENT_ITEMS.length]; }
+function msUntilNextEvent(){
+  const next=(todayIndex()+1)*86400000;
+  return Math.max(0,next-Date.now());
+}
+function activeRollPool(){ return ITEMS.concat([getActiveEventItem()]); }
 
 const UPGRADES = {
   luck:      {name:"Suerte",                 icon:"🍀", max:20, base:50,  growth:1.6,  desc:lv=>`+${(lv*8)}% de peso a objetos Raros o superiores.`},
@@ -597,9 +733,24 @@ function roomComplete(state, roomIdx){
 }
 
 /* =========================================================
+   MISIONES DIARIAS
+   ========================================================= */
+const MISSION_POOL = [
+  {id:"rolls",   icon:"🎲", label:t=>`Realiza ${t} tiradas`,                          tiers:[15,30,60],   reward:t=>t*4},
+  {id:"coins",   icon:"💰", label:t=>`Gana ${t.toLocaleString("es-ES")} monedas`,      tiers:[150,400,1000],reward:t=>Math.round(t*0.4)},
+  {id:"rare",    icon:"✨", label:t=>`Consigue ${t} objeto${t>1?"s":""} Raro o superior`, tiers:[1,2,4],   reward:t=>t*90},
+  {id:"upgrade", icon:"🔧", label:()=>`Compra una mejora en la tienda`,                tiers:[1],          reward:()=>60},
+  {id:"equip",   icon:"⭐", label:()=>`Equipa un objeto en el museo`,                  tiers:[1],          reward:()=>40},
+];
+
+/* =========================================================
    STATE
    ========================================================= */
 const SAVE_KEY = "museumRngSave_v1";
+const OFFLINE_CAP_SECONDS = 8*3600;
+const PITY_SOFT_START = 40;
+const PITY_HARD_AT = 90;
+const PRESTIGE_MIN_PAID_ROLLS = 50;
 const DEFAULT_STATE = {
   coins:0,
   items:{},          // id -> {count, firstAt}
@@ -609,13 +760,17 @@ const DEFAULT_STATE = {
   stats:{
     totalRolls:0, paidRolls:0, coinsEarnedTotal:0, coinsSpentTotal:0,
     playTimeSeconds:0, highestRarity:-1, mostValuableItemId:null,
-    bestCommonStreak:0, currentCommonStreak:0,
+    bestCommonStreak:0, currentCommonStreak:0, pityCounter:0,
   },
+  prestige:{points:0, count:0},
+  missions:null,     // se genera perezosamente con ensureDailyMissions()
   soundOn:true,
   createdAt:Date.now(),
+  lastActiveAt:Date.now(),
 };
 
 let state = loadState();
+let pendingOfflineReport = null;
 
 function loadState(){
   try{
@@ -625,6 +780,7 @@ function loadState(){
     return Object.assign(structuredClone(DEFAULT_STATE), parsed, {
       upgrades:Object.assign({},DEFAULT_STATE.upgrades,parsed.upgrades),
       stats:Object.assign({},DEFAULT_STATE.stats,parsed.stats),
+      prestige:Object.assign({},DEFAULT_STATE.prestige,parsed.prestige),
     });
   }catch(e){
     console.warn("Save corrupta, empezando de nuevo.",e);
@@ -632,7 +788,24 @@ function loadState(){
   }
 }
 function saveState(){
+  state.lastActiveAt = Date.now();
   localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+}
+
+/* =========================================================
+   PROGRESO OFFLINE
+   ========================================================= */
+function computeOfflineEarnings(){
+  if(!state.lastActiveAt) return null;
+  const elapsedSec = Math.floor((Date.now()-state.lastActiveAt)/1000);
+  if(elapsedSec < 60) return null;
+  const cappedSec = Math.min(elapsedSec, OFFLINE_CAP_SECONDS);
+  const cps = totalCps();
+  const coins = Math.floor(cps*cappedSec);
+  if(coins<=0) return null;
+  state.coins += coins;
+  state.stats.coinsEarnedTotal += coins;
+  return {elapsedSec, cappedSec, coins};
 }
 
 /* =========================================================
@@ -664,6 +837,22 @@ function sfxResult(rarity){
     [261,329,392,523,659,784,1046].forEach((f,i)=>tone(f,.35,"triangle",.15,i*.09));
   }
 }
+function sfxSuspense(durationSec){
+  if(!state.soundOn) return;
+  ensureAudio();
+  if(!actx) return;
+  const t0=actx.currentTime;
+  const osc=actx.createOscillator();
+  const gain=actx.createGain();
+  osc.type="sawtooth";
+  osc.frequency.setValueAtTime(70,t0);
+  osc.frequency.exponentialRampToValueAtTime(340,t0+durationSec);
+  gain.gain.setValueAtTime(0.0001,t0);
+  gain.gain.exponentialRampToValueAtTime(0.09,t0+durationSec*0.7);
+  gain.gain.exponentialRampToValueAtTime(0.0001,t0+durationSec+0.1);
+  osc.connect(gain).connect(actx.destination);
+  osc.start(t0); osc.stop(t0+durationSec+0.15);
+}
 
 /* =========================================================
    ECONOMY HELPERS
@@ -674,41 +863,59 @@ function upgradeCost(key){
   if(lv>=u.max) return null;
   return Math.round(u.base*Math.pow(u.growth,lv));
 }
+function prestigeDiscountPct(){ return Math.min(state.prestige.points*1,25); }
 function rollCost(){
   if(state.stats.totalRolls===0) return 0;
   const paid = state.stats.paidRolls;
   let cost = 5*Math.pow(1.12,paid);
-  const discountLv = state.upgrades.discount;
-  const discountMult = 1 - Math.min(discountLv*0.03,0.45);
-  cost *= discountMult;
+  const shopDisc = Math.min(state.upgrades.discount*0.03,0.45);
+  const legacyDisc = prestigeDiscountPct()/100;
+  const disc = Math.min(shopDisc+legacyDisc, 0.7);
+  cost *= (1-disc);
   return Math.max(1,Math.round(cost));
 }
 function maxSlots(){ return 1+state.upgrades.slots; }
-function incomeMultiplier(){ return 1+state.upgrades.income*0.08; }
+function prestigeIncomeBonus(){ return state.prestige.points*0.03; }
+function incomeMultiplier(){ return (1+state.upgrades.income*0.08)*(1+prestigeIncomeBonus()); }
 function totalCps(){
   let sum=0;
   state.equipped.forEach(id=>{ const it=ITEM_MAP[id]; if(it) sum+=it.cps; });
   return Math.round(sum*incomeMultiplier()*10)/10;
 }
+function prestigeLuckBonus(){ return state.prestige.points*0.02; }
 function luckWeight(item){
   let w = 1/item.denom;
   if(item.rarity>=2){
-    w *= (1+state.upgrades.luck*0.08);
+    w *= (1+state.upgrades.luck*0.08)*(1+prestigeLuckBonus());
   }
   return w;
 }
-function weightedRollItem(){
-  const weights = ITEMS.map(it=>luckWeight(it));
+function pickWeighted(pool, weights){
   const total = weights.reduce((a,b)=>a+b,0);
   let r = Math.random()*total;
-  for(let i=0;i<ITEMS.length;i++){
+  for(let i=0;i<pool.length;i++){
     r -= weights[i];
-    if(r<=0) return ITEMS[i];
+    if(r<=0) return pool[i];
   }
-  return ITEMS[ITEMS.length-1];
+  return pool[pool.length-1];
+}
+function weightedRollItem(){
+  const pool = activeRollPool();
+  const pity = state.stats.pityCounter||0;
+  if(pity>=PITY_HARD_AT){
+    const rarePool = pool.filter(it=>it.rarity>=3);
+    return pickWeighted(rarePool, rarePool.map(it=>luckWeight(it)));
+  }
+  const boost = pity>=PITY_SOFT_START ? 1+(pity-PITY_SOFT_START)*0.15 : 1;
+  const weights = pool.map(it=> it.rarity>=3 ? luckWeight(it)*boost : luckWeight(it));
+  return pickWeighted(pool, weights);
+}
+function poolForProbability(item){
+  return item && item.event ? ITEMS.concat([item]) : ITEMS;
 }
 function normalizedProbPercent(item){
-  const weights = ITEMS.map(it=>luckWeight(it));
+  const pool = poolForProbability(item);
+  const weights = pool.map(it=>luckWeight(it));
   const total = weights.reduce((a,b)=>a+b,0);
   return (luckWeight(item)/total*100);
 }
@@ -788,7 +995,7 @@ function buildReel(finalItem){
   reelTrack.style.transform="translateX(0)";
   const totalCells=46;
   const targetIndex=40;
-  const pool=ITEMS;
+  const pool=activeRollPool();
   for(let i=0;i<totalCells;i++){
     const cell=document.createElement("div");
     cell.className="reel-cell";
@@ -830,63 +1037,139 @@ function doRoll(){
   } else {
     state.stats.currentCommonStreak=0;
   }
+  state.stats.pityCounter = won.rarity>=3 ? 0 : (state.stats.pityCounter||0)+1;
 
+  bumpMission("rolls",1);
+  if(won.rarity>=2) bumpMission("rare",1);
+
+  const isEpic = won.rarity>=8; // Secreto / Divino: animación de suspense cinematográfico
   document.documentElement.style.setProperty("--anim-dur", animDuration()+"s");
   const targetIndex=buildReel(won);
   const viewport=reelTrack.parentElement;
-  requestAnimationFrame(()=>{
-    const cellW=110+10;
-    const viewportW=viewport.getBoundingClientRect().width;
-    const offset = -(targetIndex*cellW + cellW/2 - viewportW/2);
-    reelTrack.style.transition=`transform ${animDuration()}s cubic-bezier(.1,.85,.25,1)`;
-    reelTrack.style.transform=`translateX(${offset}px)`;
-    sfxRoll();
-  });
 
-  const durMs=parseFloat(animDuration())*1000;
-  setTimeout(()=>{
-    finishRoll(won,isNew);
-  },durMs+120);
+  if(isEpic){
+    requestAnimationFrame(()=>{
+      const cellW=110+10;
+      const viewportW=viewport.getBoundingClientRect().width;
+      const fullOffset=-(targetIndex*cellW+cellW/2-viewportW/2);
+      const nearOffset=fullOffset+cellW*1.4;
+      const baseDur=parseFloat(animDuration());
+      const phase1Dur=baseDur*0.55;
+      const phase2Dur=baseDur*1.35;
+      const totalMs=(phase1Dur+phase2Dur)*1000;
+
+      showEpicVignette(won);
+      sfxSuspense(phase1Dur+phase2Dur);
+
+      reelTrack.style.transition=`transform ${phase1Dur}s cubic-bezier(.4,0,.6,1)`;
+      reelTrack.style.transform=`translateX(${nearOffset}px)`;
+      sfxRoll();
+
+      setTimeout(()=>{
+        viewport.classList.add("epic-suspense");
+        reelTrack.style.transition=`transform ${phase2Dur}s cubic-bezier(.05,.9,.03,1)`;
+        reelTrack.style.transform=`translateX(${fullOffset}px)`;
+      },phase1Dur*1000);
+
+      setTimeout(()=>{
+        viewport.classList.remove("epic-suspense");
+        hideEpicVignette();
+        finishRoll(won,isNew,true);
+      },totalMs+150);
+    });
+  } else {
+    requestAnimationFrame(()=>{
+      const cellW=110+10;
+      const viewportW=viewport.getBoundingClientRect().width;
+      const offset = -(targetIndex*cellW + cellW/2 - viewportW/2);
+      reelTrack.style.transition=`transform ${animDuration()}s cubic-bezier(.1,.85,.25,1)`;
+      reelTrack.style.transform=`translateX(${offset}px)`;
+      sfxRoll();
+    });
+    const durMs=parseFloat(animDuration())*1000;
+    setTimeout(()=>{
+      finishRoll(won,isNew,false);
+    },durMs+120);
+  }
 }
 
-function finishRoll(won,isNew){
+function finishRoll(won,isNew,isEpic){
   rolling=false;
   const cells=reelTrack.querySelectorAll(".reel-cell");
   if(cells[40]) cells[40].classList.add("landing");
 
   sfxResult(won.rarity);
-  if(won.rarity>=4) screenShake();
+  if(won.rarity>=4) screenShake(isEpic);
   if(won.rarity>=6) flashScreen();
   if(won.rarity>=4) burstParticles(won.rarity);
+  if(isEpic){
+    setTimeout(()=>burstParticles(won.rarity),260);
+    setTimeout(()=>burstParticles(won.rarity),560);
+  }
 
-  showResultCard(won,isNew);
+  showResultCard(won,isNew,isEpic);
   addRecentPull(won);
   updateEquippedBar();
   renderTop();
   updateRollButton();
   checkAchievements();
+  checkMissions();
   saveState();
   renderMuseum();
   renderCollection();
   renderStats();
+  renderPityBar();
 }
 
-function screenShake(){
+function screenShake(strong){
   const app=document.getElementById("app");
-  app.classList.remove("shake"); void app.offsetWidth; app.classList.add("shake");
+  app.classList.remove("shake","shake-strong");
+  void app.offsetWidth;
+  app.classList.add(strong?"shake-strong":"shake");
 }
 function flashScreen(){
   const f=document.getElementById("flashOverlay");
   f.classList.remove("flash"); void f.offsetWidth; f.classList.add("flash");
 }
+function showEpicVignette(item){
+  const rar=RARITIES[item.rarity];
+  const v=document.getElementById("epicVignette");
+  if(!v) return;
+  v.style.setProperty("--rc",rar.color);
+  v.style.setProperty("--rcg",rar.glow);
+  v.classList.add("show");
+}
+function hideEpicVignette(){
+  const v=document.getElementById("epicVignette");
+  if(v) v.classList.remove("show");
+}
+function renderPityBar(){
+  const bar=document.getElementById("pityBarFill");
+  const label=document.getElementById("pityLabel");
+  if(!bar||!label) return;
+  const pity=state.stats.pityCounter||0;
+  const pct=Math.min(100,Math.round(pity/PITY_HARD_AT*100));
+  bar.style.width=pct+"%";
+  if(pity>=PITY_HARD_AT-1){
+    label.textContent="🍀 ¡Tirada garantizada Épica o superior!";
+    bar.classList.add("pity-hot");
+  } else if(pity>=PITY_SOFT_START){
+    label.textContent=`🍀 Racha sin Épico+: ${pity} — ¡la suerte está de tu lado!`;
+    bar.classList.add("pity-hot");
+  } else {
+    label.textContent=`Racha sin Épico+: ${pity}/${PITY_HARD_AT}`;
+    bar.classList.remove("pity-hot");
+  }
+}
 
-function showResultCard(item,isNew){
+function showResultCard(item,isNew,isEpic){
   const rar=RARITIES[item.rarity];
   const card=document.getElementById("resultCard");
   card.style.setProperty("--rc",rar.color);
   card.style.setProperty("--rcg",rar.glow);
+  card.classList.toggle("epic",!!isEpic);
   document.getElementById("resultIcon").textContent=item.icon;
-  document.getElementById("resultRarity").textContent=rar.name;
+  document.getElementById("resultRarity").textContent=rar.name+(item.event?" · Evento":"");
   document.getElementById("resultRarity").style.color=rar.color;
   document.getElementById("resultName").textContent=item.name;
   document.getElementById("resultProb").textContent="🎯 "+fmtDenom(item.denom);
@@ -935,11 +1218,12 @@ rollBtn.addEventListener("click",doRoll);
    ========================================================= */
 function renderMuseum(){
   const container=document.getElementById("roomsContainer");
+  const activeEvt=getActiveEventItem();
   container.innerHTML = ROOMS.map((room,ri)=>{
-    const roomItems = ITEMS.filter(i=>i.room===ri);
+    const roomItems = ALL_ITEMS.filter(i=>i.room===ri);
     const discoveredCount = roomItems.filter(i=>state.items[i.id]).length;
     const pct = Math.round(discoveredCount/roomItems.length*100);
-    const cards = roomItems.map(itemCardHtml).join("");
+    const cards = roomItems.map(it=>itemCardHtml(it,activeEvt)).join("");
     return `<div class="room">
       <div class="room-header">
         <div class="room-title">${room.icon} ${room.name}</div>
@@ -953,20 +1237,23 @@ function renderMuseum(){
     card.addEventListener("click",()=>toggleEquip(card.dataset.id));
   });
 }
-function itemCardHtml(item){
+function itemCardHtml(item,activeEvt){
   const owned=state.items[item.id];
   const rar=RARITIES[item.rarity];
   const isEq=state.equipped.includes(item.id);
+  const isActiveEvt = item.event && activeEvt && item.id===activeEvt.id;
+  const evtBadge = item.event ? `<div class="badge-evt">${isActiveEvt?"🎪 HOY":"🎪"}</div>` : "";
   if(!owned){
     return `<div class="item-card locked" data-rarity="${item.rarity}" style="--ic:${rar.color};--icg:${rar.glow};">
+      ${evtBadge}
       <div class="icon">❔</div>
       <div class="iname">???</div>
       <div class="irar" style="color:var(--text-2);">${rar.name}</div>
-      <div class="icount">${fmtDenom(item.denom)}</div>
+      <div class="icount">${item.event&&!isActiveEvt?"Vuelve otro día":fmtDenom(item.denom)}</div>
     </div>`;
   }
   return `<div class="item-card discovered ${isEq?"equipped":""}" data-id="${item.id}" data-rarity="${item.rarity}" style="--ic:${rar.color};--icg:${rar.glow};">
-    ${isEq?'<div class="badge-eq">⭐</div>':""}
+    ${isEq?'<div class="badge-eq">⭐</div>':evtBadge}
     <div class="icon">${item.icon}</div>
     <div class="iname">${item.name}</div>
     <div class="irar" style="color:${rar.color};">${rar.name}</div>
@@ -984,6 +1271,7 @@ function toggleEquip(id){
       return;
     }
     state.equipped.push(id);
+    bumpMission("equip",1);
   }
   updateEquippedBar();
   renderTop();
@@ -1028,6 +1316,7 @@ function buyUpgrade(key){
   state.upgrades[key]++;
   ensureAudio(); sfxBuy();
   toast(`🔧 <b>${UPGRADES[key].name}</b> mejorado a nivel ${state.upgrades[key]}`);
+  bumpMission("upgrade",1);
   renderShop();
   renderTop();
   updateRollButton();
@@ -1041,20 +1330,22 @@ function buyUpgrade(key){
    ========================================================= */
 function renderCollection(){
   const body=document.getElementById("collectionBody");
-  body.innerHTML=ITEMS.map(item=>{
+  const activeEvt=getActiveEventItem();
+  body.innerHTML=ALL_ITEMS.map(item=>{
     const owned=state.items[item.id];
     const rar=RARITIES[item.rarity];
     const prob = normalizedProbPercent(item);
+    const tag = item.event ? ` <span class="subtle">🎪${item.id===activeEvt.id?" hoy":""}</span>` : "";
     if(!owned){
       return `<tr style="opacity:.55;">
-        <td>❔</td><td>???</td>
+        <td>❔</td><td>???${tag}</td>
         <td><span class="rar-pill" style="background:${rar.glow};color:#0a0a12;box-shadow:0 0 10px ${rar.glow};">${rar.name}</span></td>
         <td>${fmtDenom(item.denom)}</td><td>-</td><td>0</td><td>-</td>
       </tr>`;
     }
     return `<tr>
       <td style="font-size:1.3rem;">${item.icon}</td>
-      <td><b>${item.name}</b></td>
+      <td><b>${item.name}</b>${tag}</td>
       <td><span class="rar-pill" style="background:${rar.glow};color:#0a0a12;">${rar.name}</span></td>
       <td>${fmtDenom(item.denom)} <span class="subtle">(${prob.toFixed(prob<0.01?4:2)}%)</span></td>
       <td>+${fmt(item.cps)}/s</td>
@@ -1101,11 +1392,13 @@ function checkAchievements(){
 function renderStats(){
   const grid=document.getElementById("statGrid");
   const discovered=Object.keys(state.items).length;
+  const eventDiscovered=EVENT_ITEMS.filter(i=>state.items[i.id]).length;
   const mostVal = state.stats.mostValuableItemId ? ITEM_MAP[state.stats.mostValuableItemId] : null;
   const highestRar = state.stats.highestRarity>=0 ? RARITIES[state.stats.highestRarity].name : "-";
   const cards=[
     ["🎲 Tiradas realizadas", fmt(state.stats.totalRolls)],
     ["🏺 Objetos descubiertos", `${discovered}/${ITEMS.length}`],
+    ["🎪 Objetos de evento", `${eventDiscovered}/${EVENT_ITEMS.length}`],
     ["✨ Rareza más alta", highestRar],
     ["💰 Monedas generadas", fmt(state.stats.coinsEarnedTotal)],
     ["🛍️ Monedas gastadas", fmt(state.stats.coinsSpentTotal)],
@@ -1113,8 +1406,126 @@ function renderStats(){
     ["🔥 Mejor racha común", fmt(state.stats.bestCommonStreak)],
     ["💎 Objeto más valioso", mostVal ? `${mostVal.icon} ${mostVal.name}` : "-"],
     ["🏆 Logros", `${Object.keys(state.achievements).length}/${ACHIEVEMENTS.length}`],
+    ["🌌 Renacimientos", fmt(state.prestige.count)],
   ];
   grid.innerHTML=cards.map(([lab,val])=>`<div class="stat-card"><div class="stat-val">${val}</div><div class="stat-lab">${lab}</div></div>`).join("");
+}
+
+/* =========================================================
+   MISIONES DIARIAS
+   ========================================================= */
+function todayStr(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+function ensureDailyMissions(){
+  if(!state.missions || state.missions.date!==todayStr()){
+    const shuffled=[...MISSION_POOL].sort(()=>Math.random()-0.5).slice(0,3);
+    const list=shuffled.map(tpl=>{
+      const target=tpl.tiers[Math.floor(Math.random()*tpl.tiers.length)];
+      return {id:tpl.id, target, reward:tpl.reward(target), claimed:false};
+    });
+    state.missions={date:todayStr(), list, progress:{rolls:0,coins:0,rare:0,upgrade:0,equip:0}};
+  }
+}
+function bumpMission(type, amount){
+  ensureDailyMissions();
+  state.missions.progress[type]=(state.missions.progress[type]||0)+amount;
+  checkMissions();
+}
+function checkMissions(){
+  ensureDailyMissions();
+  let any=false;
+  state.missions.list.forEach(m=>{
+    if(!m.claimed && (state.missions.progress[m.id]||0)>=m.target){
+      m.claimed=true;
+      state.coins+=m.reward;
+      state.stats.coinsEarnedTotal+=m.reward;
+      ensureAudio(); sfxBuy();
+      toast(`🗓️ Misión completada: +${fmt(m.reward)} monedas`);
+      any=true;
+    }
+  });
+  if(any){ renderTop(); }
+  renderMissions();
+}
+function msUntilNextLocalMidnight(){
+  const now=new Date();
+  const next=new Date(now.getFullYear(),now.getMonth(),now.getDate()+1,0,0,0,0);
+  return Math.max(0,next-now);
+}
+function renderMissions(){
+  const grid=document.getElementById("missionsGrid");
+  if(!grid) return;
+  ensureDailyMissions();
+  const tpl=Object.fromEntries(MISSION_POOL.map(m=>[m.id,m]));
+  grid.innerHTML=state.missions.list.map(m=>{
+    const t=tpl[m.id];
+    const progress=Math.min(state.missions.progress[m.id]||0,m.target);
+    const pct=Math.round(progress/m.target*100);
+    return `<div class="ach-card ${m.claimed?"unlocked":""}">
+      <div class="ach-icon">${m.claimed?"✅":t.icon}</div>
+      <div style="flex:1;">
+        <div class="ach-name">${t.label(m.target)}</div>
+        <div class="upg-bar" style="margin:6px 0;"><div class="upg-bar-fill" style="width:${pct}%;"></div></div>
+        <div class="ach-desc">${progress}/${m.target}</div>
+        <div class="ach-reward">🪙 Recompensa: ${fmt(m.reward)}${m.claimed?" · Reclamada":""}</div>
+      </div>
+    </div>`;
+  }).join("");
+  const ms=msUntilNextLocalMidnight();
+  const h=Math.floor(ms/3600000), mnt=Math.floor((ms%3600000)/60000);
+  const countdownEl=document.getElementById("missionsCountdown");
+  if(countdownEl) countdownEl.textContent=`Nuevas misiones en ${h}h ${mnt}m`;
+}
+
+/* =========================================================
+   PRESTIGIO / LEGADO
+   ========================================================= */
+function canPrestige(){ return state.stats.paidRolls>=PRESTIGE_MIN_PAID_ROLLS; }
+function prestigeGain(){
+  const g = Math.sqrt(state.stats.paidRolls)*1.2 + Object.keys(state.items).length*0.6 + Math.max(0,state.stats.highestRarity)*2;
+  return Math.max(1,Math.floor(g));
+}
+function doPrestige(){
+  if(!canPrestige()) return;
+  const gain=prestigeGain();
+  const msg=`Vas a Renacer:\n\n· Perderás tus monedas y todas las mejoras de la tienda.\n· El coste de las tiradas volverá a su valor inicial.\n· Tu museo, objetos equipados y logros se conservan.\n\nA cambio, ganarás +${gain} Fragmentos de Legado PERMANENTES.\n\n¿Confirmas el renacimiento?`;
+  if(!confirm(msg)) return;
+  state.prestige.points+=gain;
+  state.prestige.count+=1;
+  state.coins=0;
+  state.upgrades={luck:0,discount:0,income:0,slots:0,animSpeed:0};
+  state.stats.paidRolls=0;
+  state.stats.coinsSpentTotal=0;
+  state.equipped=state.equipped.slice(0,maxSlots());
+  ensureAudio(); sfxAchievement();
+  toast(`🌌 ¡Has renacido! +${gain} Fragmentos de Legado`);
+  saveState();
+  fullRender();
+}
+function renderPrestige(){
+  const panel=document.getElementById("prestigeInfo");
+  if(!panel) return;
+  const gain=prestigeGain();
+  const eligible=canPrestige();
+  panel.innerHTML=`
+    <div class="stat-grid" style="margin-bottom:16px;">
+      <div class="stat-card"><div class="stat-val">${fmt(state.prestige.points)}</div><div class="stat-lab">🌌 Fragmentos de Legado</div></div>
+      <div class="stat-card"><div class="stat-val">+${(prestigeLuckBonus()*100).toFixed(0)}%</div><div class="stat-lab">🍀 Suerte permanente</div></div>
+      <div class="stat-card"><div class="stat-val">+${(prestigeIncomeBonus()*100).toFixed(0)}%</div><div class="stat-lab">📈 Ingresos permanentes</div></div>
+      <div class="stat-card"><div class="stat-val">-${prestigeDiscountPct().toFixed(0)}%</div><div class="stat-lab">💰 Descuento de tirada permanente</div></div>
+      <div class="stat-card"><div class="stat-val">${fmt(state.prestige.count)}</div><div class="stat-lab">🔁 Renacimientos totales</div></div>
+    </div>
+    <div class="upg-bar" style="margin-bottom:8px;"><div class="upg-bar-fill" style="width:${Math.min(100,Math.round(state.stats.paidRolls/PRESTIGE_MIN_PAID_ROLLS*100))}%;"></div></div>
+    <div class="subtle" style="margin-bottom:14px;">Tiradas de pago realizadas: ${state.stats.paidRolls}/${PRESTIGE_MIN_PAID_ROLLS} necesarias para poder renacer.</div>
+    <button class="roll-btn" id="prestigeBtn" style="padding:14px 32px;font-size:1rem;" ${eligible?"":"disabled"}>
+      🌌 RENACER${eligible?` (+${gain} Fragmentos)`:""}
+    </button>
+    ${!eligible?'<div class="roll-hint" style="margin-top:8px;">Sigue jugando para desbloquear tu primer renacimiento.</div>':""}
+  `;
+  const btn=document.getElementById("prestigeBtn");
+  if(btn) btn.addEventListener("click",doPrestige);
 }
 
 /* =========================================================
@@ -1213,22 +1624,69 @@ document.getElementById("resetBtn").addEventListener("click",()=>{
 });
 
 /* =========================================================
+   EVENTO DEL DÍA (banner en la sala de tiradas)
+   ========================================================= */
+function renderEventBanner(){
+  const el=document.getElementById("eventBanner");
+  if(!el) return;
+  const evt=getActiveEventItem();
+  const owned=state.items[evt.id];
+  const rar=RARITIES[evt.rarity];
+  const ms=msUntilNextEvent();
+  const h=Math.floor(ms/3600000), mnt=Math.floor((ms%3600000)/60000);
+  el.style.setProperty("--ic",rar.color);
+  el.style.setProperty("--icg",rar.glow);
+  el.innerHTML=`
+    <div class="event-icon">${evt.icon}</div>
+    <div class="event-info">
+      <div class="event-title">🎪 Evento del día: <b>${evt.name}</b></div>
+      <div class="subtle">${fmtDenom(evt.denom)} · +${fmt(evt.cps)}/s ${owned?`· conseguido x${owned.count}`:"· disponible en esta tirada"}</div>
+    </div>
+    <div class="event-countdown">Cambia en ${h}h ${mnt}m</div>
+  `;
+}
+
+/* =========================================================
    GAME LOOP (income tick + autosave)
    ========================================================= */
+let lastMinuteMark=-1;
 setInterval(()=>{
   const income=totalCps();
   if(income>0){
     state.coins+=income;
     state.stats.coinsEarnedTotal+=income;
+    bumpMission("coins",income);
   }
   state.stats.playTimeSeconds++;
   renderTop();
   updateRollButton();
+  const minuteMark=Math.floor(state.stats.playTimeSeconds/30);
+  if(minuteMark!==lastMinuteMark){
+    lastMinuteMark=minuteMark;
+    renderEventBanner();
+    renderMissions();
+  }
 },1000);
 
 setInterval(saveState,10000);
 window.addEventListener("beforeunload",saveState);
 document.addEventListener("visibilitychange",()=>{ if(document.hidden) saveState(); });
+
+/* =========================================================
+   MODAL DE PROGRESO OFFLINE
+   ========================================================= */
+function showOfflineModal(report){
+  const overlay=document.getElementById("offlineOverlay");
+  if(!overlay) return;
+  const h=Math.floor(report.elapsedSec/3600), m=Math.floor((report.elapsedSec%3600)/60);
+  const capped = report.elapsedSec>report.cappedSec;
+  document.getElementById("offlineCoins").textContent="+"+fmt(report.coins)+" monedas";
+  document.getElementById("offlineTime").textContent=`Estuviste fuera ${h}h ${m}m${capped?` (contabilizado hasta el máximo de ${OFFLINE_CAP_SECONDS/3600}h)`:""}.`;
+  overlay.classList.add("show");
+}
+document.getElementById("offlineClose").addEventListener("click",()=>{
+  document.getElementById("offlineOverlay").classList.remove("show");
+});
 
 /* =========================================================
    INIT
@@ -1243,9 +1701,16 @@ function fullRender(){
   renderCollection();
   renderAchievements();
   renderStats();
+  renderMissions();
+  renderPrestige();
+  renderPityBar();
+  renderEventBanner();
   buildReel(ITEMS[0]);
 }
+pendingOfflineReport = computeOfflineEarnings();
 fullRender();
+if(pendingOfflineReport) showOfflineModal(pendingOfflineReport);
+saveState();
 
 })();
 </script>

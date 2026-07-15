@@ -236,6 +236,8 @@ h2.section-title{
 .pity-wrap{max-width:420px;margin:18px auto 0;}
 .pity-bar{height:8px;border-radius:5px;background:var(--panel-light);overflow:hidden;border:1px solid var(--border);}
 .pity-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .4s ease;}
+#secretPityBarFill{background:linear-gradient(90deg,#2dd4bf,#0891b2);}
+#divinePityBarFill{background:linear-gradient(90deg,var(--gold),#fff8e1);}
 .pity-bar.pity-hot .pity-bar-fill,.pity-bar-fill.pity-hot{background:linear-gradient(90deg,#f472b6,var(--gold));}
 .pity-bar-fill.pity-hot{animation:pityGlow 1.2s ease-in-out infinite;}
 @keyframes pityGlow{0%,100%{filter:brightness(1);}50%{filter:brightness(1.4);}}
@@ -581,6 +583,14 @@ footer.foot{text-align:center;color:var(--text-2);font-size:.72rem;margin-top:30
         <div class="pity-wrap">
           <div class="pity-bar"><div class="pity-bar-fill" id="pityBarFill"></div></div>
           <div class="pity-label" id="pityLabel">Racha sin Épico+: 0/90</div>
+        </div>
+        <div class="pity-wrap">
+          <div class="pity-bar"><div class="pity-bar-fill" id="secretPityBarFill"></div></div>
+          <div class="pity-label" id="secretPityLabel">Racha sin Secreto+: 0/400</div>
+        </div>
+        <div class="pity-wrap">
+          <div class="pity-bar"><div class="pity-bar-fill" id="divinePityBarFill"></div></div>
+          <div class="pity-label" id="divinePityLabel">Racha sin Divino: 0/1200</div>
         </div>
         <div class="equipped-bar" id="equippedBar"></div>
         <div class="recent-pulls" id="recentPulls"></div>
@@ -1026,6 +1036,30 @@ const SAVE_KEY = "museumRngSave_v1";
 const OFFLINE_CAP_SECONDS = 8*3600;
 const PITY_SOFT_START = 40;
 const PITY_HARD_AT = 90;
+const SECRET_PITY_SOFT_START = 150;
+const SECRET_PITY_HARD_AT = 400;
+const DIVINE_PITY_SOFT_START = 400;
+const DIVINE_PITY_HARD_AT = 1200;
+function pitySecretDivineOverride(pool){
+  const divineC = state.stats.divineCounter||0;
+  const secretC = state.stats.secretCounter||0;
+  if(divineC>=DIVINE_PITY_HARD_AT) return pool.filter(it=>it.rarity>=9);
+  if(secretC>=SECRET_PITY_HARD_AT) return pool.filter(it=>it.rarity>=8);
+  return null;
+}
+function secretDivineBoostMultiplier(item){
+  const divineC = state.stats.divineCounter||0;
+  const secretC = state.stats.secretCounter||0;
+  let m=1;
+  if(item.rarity>=8 && secretC>=SECRET_PITY_SOFT_START) m*=1+(secretC-SECRET_PITY_SOFT_START)*0.05;
+  if(item.rarity>=9 && divineC>=DIVINE_PITY_SOFT_START) m*=1+(divineC-DIVINE_PITY_SOFT_START)*0.05;
+  return m;
+}
+function updatePityCounters(won){
+  state.stats.pityCounter = won.rarity>=3 ? 0 : (state.stats.pityCounter||0)+1;
+  state.stats.secretCounter = won.rarity>=8 ? 0 : (state.stats.secretCounter||0)+1;
+  state.stats.divineCounter = won.rarity>=9 ? 0 : (state.stats.divineCounter||0)+1;
+}
 const DEFAULT_STATE = {
   coins:0,
   items:{},          // id -> {count, firstAt}
@@ -1035,7 +1069,7 @@ const DEFAULT_STATE = {
   stats:{
     totalRolls:0, paidRolls:0, coinsEarnedTotal:0, coinsSpentTotal:0,
     playTimeSeconds:0, highestRarity:-1, mostValuableItemId:null,
-    bestCommonStreak:0, currentCommonStreak:0, pityCounter:0,
+    bestCommonStreak:0, currentCommonStreak:0, pityCounter:0, secretCounter:0, divineCounter:0,
   },
   prestige:{points:0, count:0},
   missions:null,     // se genera perezosamente con ensureDailyMissions()
@@ -1191,13 +1225,16 @@ function weightedRollItem(milestone){
     const weights = filtered.map(it=>luckWeight(it)*(1+(it.rarity-4)*0.8));
     return pickWeighted(filtered, weights);
   }
+  const sdOverride = pitySecretDivineOverride(pool);
+  if(sdOverride) return pickWeighted(sdOverride, sdOverride.map(it=>luckWeight(it)));
+
   const pity = state.stats.pityCounter||0;
   if(pity>=PITY_HARD_AT){
     const rarePool = pool.filter(it=>it.rarity>=3);
     return pickWeighted(rarePool, rarePool.map(it=>luckWeight(it)));
   }
   const boost = pity>=PITY_SOFT_START ? 1+(pity-PITY_SOFT_START)*0.15 : 1;
-  const weights = pool.map(it=> it.rarity>=3 ? luckWeight(it)*boost : luckWeight(it));
+  const weights = pool.map(it=> luckWeight(it)*(it.rarity>=3?boost:1)*secretDivineBoostMultiplier(it));
   return pickWeighted(pool, weights);
 }
 function poolForProbability(item){
@@ -1350,7 +1387,7 @@ function doRoll(){
   } else {
     state.stats.currentCommonStreak=0;
   }
-  state.stats.pityCounter = won.rarity>=3 ? 0 : (state.stats.pityCounter||0)+1;
+  updatePityCounters(won);
 
   bumpMission("rolls",1);
   if(won.rarity>=2) bumpMission("rare",1);
@@ -1457,23 +1494,27 @@ function hideEpicVignette(){
   const v=document.getElementById("epicVignette");
   if(v) v.classList.remove("show");
 }
-function renderPityBar(){
-  const bar=document.getElementById("pityBarFill");
-  const label=document.getElementById("pityLabel");
+function renderPityGeneric(barId,labelId,count,softStart,hardAt,name){
+  const bar=document.getElementById(barId);
+  const label=document.getElementById(labelId);
   if(!bar||!label) return;
-  const pity=state.stats.pityCounter||0;
-  const pct=Math.min(100,Math.round(pity/PITY_HARD_AT*100));
+  const pct=Math.min(100,Math.round(count/hardAt*100));
   bar.style.width=pct+"%";
-  if(pity>=PITY_HARD_AT-1){
-    label.textContent="🍀 ¡Tirada garantizada Épica o superior!";
+  if(count>=hardAt-1){
+    label.textContent=`🍀 ¡Tirada garantizada ${name}!`;
     bar.classList.add("pity-hot");
-  } else if(pity>=PITY_SOFT_START){
-    label.textContent=`🍀 Racha sin Épico+: ${pity} — ¡la suerte está de tu lado!`;
+  } else if(count>=softStart){
+    label.textContent=`🍀 Racha sin ${name}: ${count} — ¡la suerte está de tu lado!`;
     bar.classList.add("pity-hot");
   } else {
-    label.textContent=`Racha sin Épico+: ${pity}/${PITY_HARD_AT}`;
+    label.textContent=`Racha sin ${name}: ${count}/${hardAt}`;
     bar.classList.remove("pity-hot");
   }
+}
+function renderPityBar(){
+  renderPityGeneric("pityBarFill","pityLabel",state.stats.pityCounter||0,PITY_SOFT_START,PITY_HARD_AT,"Épico+");
+  renderPityGeneric("secretPityBarFill","secretPityLabel",state.stats.secretCounter||0,SECRET_PITY_SOFT_START,SECRET_PITY_HARD_AT,"Secreto+");
+  renderPityGeneric("divinePityBarFill","divinePityLabel",state.stats.divineCounter||0,DIVINE_PITY_SOFT_START,DIVINE_PITY_HARD_AT,"Divino");
 }
 
 function showResultCard(item,isNew,isEpic,milestone,isPreview){
@@ -1693,11 +1734,15 @@ function doDig(){
 function completeDig(){
   const w=currentWorld();
   const pool=w.rollItems.concat(w.excavationItems);
-  const won=pickWeighted(pool, pool.map(digWeight));
+  const sdOverride=pitySecretDivineOverride(pool);
+  const won = sdOverride
+    ? pickWeighted(sdOverride, sdOverride.map(it=>digWeight(it)))
+    : pickWeighted(pool, pool.map(it=>digWeight(it)*secretDivineBoostMultiplier(it)));
   const isNew=!state.items[won.id];
   if(!state.items[won.id]) state.items[won.id]={count:0,firstAt:Date.now()};
   state.items[won.id].count++;
   state.dig.totalDigs=(state.dig.totalDigs||0)+1;
+  updatePityCounters(won);
   bumpMission("digs",1);
 
   const site=document.getElementById("digSite");

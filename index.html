@@ -642,7 +642,7 @@ footer.foot{text-align:center;color:var(--text-2);font-size:.72rem;margin-top:30
     <section class="view" id="view-prestige">
       <div class="panel">
         <h2 class="section-title">🌌 Legado</h2>
-        <p class="subtle" style="margin-top:-8px;margin-bottom:16px;">Renace para reiniciar el coste de tus tiradas y la tienda a cambio de Fragmentos de Legado permanentes. Tu museo, tus objetos equipados y tus logros nunca se pierden.</p>
+        <p class="subtle" style="margin-top:-8px;margin-bottom:16px;">Renace para reiniciar la tienda a cambio de Fragmentos de Legado permanentes. Tu pico, tu museo, tus objetos equipados y tus logros nunca se pierden.</p>
         <div id="prestigeInfo"></div>
       </div>
     </section>
@@ -780,10 +780,8 @@ const ITEMS = [
   {id:"ojo_infinito",    name:"Ojo del Infinito",        icon:"👁️", rarity:9, denom:500000, cps:3500, room:4},
 ];
 const EVENT_ITEMS = [
-  {id:"evt_sol",      name:"Reliquia del Sol",      icon:"☀️", rarity:6, denom:500,  cps:80,  room:5, event:true},
-  {id:"evt_luna",     name:"Reliquia de la Luna",   icon:"🌙", rarity:6, denom:500,  cps:80,  room:5, event:true},
-  {id:"evt_tormenta", name:"Núcleo de Tormenta",    icon:"🌩️", rarity:7, denom:1200, cps:150, room:5, event:true},
-  {id:"evt_arcoiris", name:"Cristal Arcoíris",      icon:"🌈", rarity:5, denom:280,  cps:40,  room:5, event:true},
+  {id:"evt_ender_pearl",  name:"Perla de Ender",   icon:"🔮", rarity:6, denom:700,  cps:65,  room:5, event:true},
+  {id:"evt_geometry_cube",name:"Cubo Saltarín",    icon:"🟧", rarity:8, denom:5000, cps:260, room:5, event:true},
 ];
 const EXCAVATION_ITEMS = [
   {id:"bolsa_monedas", name:"Bolsa de Monedas Antiguas", icon:"💰", rarity:0, denom:2,  cps:3,  room:6, dig:true},
@@ -863,24 +861,29 @@ function world1UnlockProgress(){
 
 /* --- minijuego de excavación --- */
 const PICKAXE_LEVELS = [
-  {name:"Pico de Madera",   icon:"🪵", power:1,  maxEnergy:10, regenSec:5,   cost:0},
-  {name:"Pico de Piedra",   icon:"🪨", power:2,  maxEnergy:12, regenSec:4.5, cost:80},
-  {name:"Pico de Bronce",   icon:"🔶", power:3,  maxEnergy:14, regenSec:4,   cost:250},
-  {name:"Pico de Hierro",   icon:"⚙️", power:4,  maxEnergy:16, regenSec:3.5, cost:700},
-  {name:"Pico de Plata",    icon:"🥈", power:6,  maxEnergy:18, regenSec:3,   cost:1800},
-  {name:"Pico de Oro",      icon:"🥇", power:9,  maxEnergy:20, regenSec:2.5, cost:4500},
-  {name:"Pico de Diamante", icon:"💎", power:13, maxEnergy:24, regenSec:2,   cost:12000},
-  {name:"Pico Rúnico",      icon:"✨", power:19, maxEnergy:28, regenSec:1.6, cost:35000},
-  {name:"Pico Celestial",   icon:"🌠", power:28, maxEnergy:32, regenSec:1.3, cost:100000},
-  {name:"Pico Legendario",  icon:"👑", power:42, maxEnergy:40, regenSec:1,   cost:300000},
+  {name:"Pico de Madera",   icon:"🪵", power:1,    maxEnergy:10, regenSec:5,   cost:0},
+  {name:"Pico de Piedra",   icon:"🪨", power:15,   maxEnergy:12, regenSec:4.6, cost:12},
+  {name:"Pico de Bronce",   icon:"🔶", power:25,   maxEnergy:14, regenSec:4.2, cost:20},
+  {name:"Pico de Hierro",   icon:"⚙️", power:40,   maxEnergy:16, regenSec:3.8, cost:45},
+  {name:"Pico de Plata",    icon:"🥈", power:65,   maxEnergy:19, regenSec:3.4, cost:110},
+  {name:"Pico de Oro",      icon:"🥇", power:100,  maxEnergy:22, regenSec:3.0, cost:280},
+  {name:"Pico de Platino",  icon:"⚪", power:150,  maxEnergy:26, regenSec:2.6, cost:650},
+  {name:"Pico de Diamante", icon:"💎", power:220,  maxEnergy:30, regenSec:2.2, cost:1500},
+  {name:"Pico Rúnico",      icon:"✨", power:320,  maxEnergy:35, regenSec:1.9, cost:3400},
+  {name:"Pico Encantado",   icon:"🔷", power:450,  maxEnergy:40, regenSec:1.6, cost:7800},
+  {name:"Pico Celestial",   icon:"🌠", power:600,  maxEnergy:46, regenSec:1.3, cost:16000},
+  {name:"Pico Cósmico",     icon:"🌌", power:750,  maxEnergy:53, regenSec:1.1, cost:32000},
+  {name:"Pico Divino",      icon:"👑", power:900,  maxEnergy:60, regenSec:0.9, cost:60000},
+  {name:"Pico Legendario",  icon:"🏆", power:1000, maxEnergy:70, regenSec:0.7, cost:100000},
 ];
 function currentPickaxe(){ return PICKAXE_LEVELS[state.dig.pickLevel]; }
+function effectiveMaxEnergy(){ return Math.round(currentPickaxe().maxEnergy*(1+prestigeEnergyBonusPct()/100)); }
 function digHardnessGrowth(){ return Math.min(1+(state.dig.totalDigs||0)*0.035, 8); }
 function randomSiteHardness(){
   const base=4+Math.random()*3;
   return Math.max(3,Math.round(base*digHardnessGrowth()));
 }
-function digLuckBonus(){ return Math.min((state.dig.totalDigs||0)*0.02, 5); }
+function digLuckBonus(){ return Math.min((state.dig.totalDigs||0)*0.02+state.dig.pickLevel*0.04, 8); }
 function digWeight(item){
   let w=1/item.denom;
   if(item.rarity>=2) w*=(1+digLuckBonus());
@@ -889,24 +892,30 @@ function digWeight(item){
 function digComplete(s){ return EXCAVATION_ITEMS.every(i=>s.items[i.id]); }
 
 /* --- evento rotativo diario --- */
-function todayIndex(){ return Math.floor(Date.now()/86400000); }
-function getActiveEventItem(){ return EVENT_ITEMS[todayIndex()%EVENT_ITEMS.length]; }
+const EVENT_PERIOD_MS = 5*3600*1000; // los eventos rotan cada 5 horas
+function eventPeriodIndex(){ return Math.floor(Date.now()/EVENT_PERIOD_MS); }
+function getActiveEventItem(){ return EVENT_ITEMS[eventPeriodIndex()%EVENT_ITEMS.length]; }
 function msUntilNextEvent(){
-  const next=(todayIndex()+1)*86400000;
+  const next=(eventPeriodIndex()+1)*EVENT_PERIOD_MS;
   return Math.max(0,next-Date.now());
+}
+function eventWeightMultiplier(item){
+  if(!item.event) return 1;
+  return getActiveEventItem().id===item.id ? 12 : 0.15;
 }
 function activeRollPool(){
   const w=currentWorld();
-  return w.id===0 ? w.rollItems.concat([getActiveEventItem()]) : w.rollItems;
+  return w.id===0 ? w.rollItems.concat(EVENT_ITEMS) : w.rollItems;
 }
 
 const UPGRADES = {
-  luck:      {name:"Suerte",                 icon:"🍀", max:20, base:50,  growth:1.6,  desc:lv=>`+${(lv*8)}% de peso a objetos Raros o superiores.`},
-  discount:  {name:"Descuento en Tiradas",    icon:"💰", max:15, base:40,  growth:1.55, desc:lv=>`-${Math.min(lv*3,45)}% coste de cada tirada.`},
+  luck:      {name:"Suerte",                 icon:"🍀", max:25, base:50,  growth:1.6,  desc:lv=>`+${(lv*8)}% de peso a objetos Raros o superiores.`},
+  autoroll:  {name:"Auto-Tirada",             icon:"🔄", max:10, base:60,  growth:1.55, desc:lv=>lv===0?"Compra el primer nivel para activar la tirada automática.":`Tira sola cada ${autorollInterval(lv).toFixed(1)}s.`},
   income:    {name:"Más Ingresos",            icon:"📈", max:20, base:150, growth:1.65, desc:lv=>`+${lv*8}% monedas de objetos equipados.`},
-  slots:     {name:"Espacios de Equipamiento",icon:"🗄️", max:5,  base:800, growth:3.2,  desc:lv=>`${1+lv} objeto(s) equipable(s) a la vez.`},
+  slots:     {name:"Espacios de Equipamiento",icon:"🗄️", max:6,  base:800, growth:3.2,  desc:lv=>`${1+lv} objeto(s) equipable(s) a la vez.`},
   animSpeed: {name:"Velocidad de Animación",  icon:"⚡", max:8,  base:60,  growth:1.5,  desc:lv=>`Tiradas ${Math.round(lv*8)}% más rápidas.`},
 };
+function autorollInterval(lv){ return Math.max(0.4, 3-(lv||0)*0.26); }
 
 const ACHIEVEMENTS = [
   {id:"first_item",   name:"Primer Descubrimiento", icon:"🎉", desc:"Descubre tu primer objeto.", reward:20,   cond:s=>Object.keys(s.items).length>=1},
@@ -970,7 +979,7 @@ const DEFAULT_STATE = {
   coins:0,
   items:{},          // id -> {count, firstAt}
   equipped:[],
-  upgrades:{luck:0,discount:0,income:0,slots:0,animSpeed:0},
+  upgrades:{luck:0,autoroll:0,income:0,slots:0,animSpeed:0},
   achievements:{},
   stats:{
     totalRolls:0, paidRolls:0, coinsEarnedTotal:0, coinsSpentTotal:0,
@@ -1083,17 +1092,8 @@ function upgradeCost(key){
   if(lv>=u.max) return null;
   return Math.round(u.base*Math.pow(u.growth,lv));
 }
-function prestigeDiscountPct(){ return Math.min(state.prestige.points*1,25); }
-function rollCost(){
-  if(state.stats.totalRolls===0) return 0;
-  const paid = state.stats.paidRolls;
-  let cost = 5*Math.pow(1.12,paid);
-  const shopDisc = Math.min(state.upgrades.discount*0.03,0.45);
-  const legacyDisc = prestigeDiscountPct()/100;
-  const disc = Math.min(shopDisc+legacyDisc, 0.7);
-  cost *= (1-disc);
-  return Math.max(1,Math.round(cost));
-}
+function prestigeEnergyBonusPct(){ return Math.min(state.prestige.points*1,50); }
+function rollCost(){ return 0; }
 function maxSlots(){ return 1+state.upgrades.slots; }
 function prestigeIncomeBonus(){ return state.prestige.points*0.03; }
 function incomeMultiplier(){ return (1+state.upgrades.income*0.08)*(1+prestigeIncomeBonus()); }
@@ -1108,6 +1108,7 @@ function luckWeight(item){
   if(item.rarity>=2){
     w *= (1+state.upgrades.luck*0.08)*(1+prestigeLuckBonus());
   }
+  w *= eventWeightMultiplier(item);
   return w;
 }
 function pickWeighted(pool, weights){
@@ -1132,7 +1133,7 @@ function weightedRollItem(){
 }
 function poolForProbability(item){
   if(item && WORLD2_ITEMS.includes(item)) return WORLD2_ITEMS;
-  return item && item.event ? ITEMS.concat([item]) : ITEMS;
+  return item && item.event ? ITEMS.concat(EVENT_ITEMS) : ITEMS;
 }
 function normalizedProbPercent(item){
   const pool = poolForProbability(item);
@@ -1191,6 +1192,16 @@ const rollCostLabel=document.getElementById("rollCostLabel");
 const rollHint=document.getElementById("rollHint");
 const reelTrack=document.getElementById("reelTrack");
 let rolling=false;
+let autorollTimer=null;
+function scheduleAutoroll(){
+  if(autorollTimer){ clearTimeout(autorollTimer); autorollTimer=null; }
+  const lv=state.upgrades.autoroll;
+  if(!lv) return;
+  autorollTimer=setTimeout(()=>{
+    if(!rolling) doRoll();
+    scheduleAutoroll();
+  }, autorollInterval(lv)*1000);
+}
 
 function animDuration(){
   const lv=state.upgrades.animSpeed;
@@ -1199,15 +1210,11 @@ function animDuration(){
 }
 
 function updateRollButton(){
-  const cost=rollCost();
-  if(state.stats.totalRolls===0){
-    rollCostLabel.textContent="Gratis";
-    rollHint.textContent="Tu primera tirada es gratuita. ¡Pruébala!";
-  } else {
-    rollCostLabel.textContent=fmt(cost)+" monedas";
-    rollHint.textContent = state.coins<cost ? "No tienes monedas suficientes para tirar." : "Cada tirada revela un objeto para tu museo.";
-  }
-  rollBtn.disabled = rolling || (state.stats.totalRolls>0 && state.coins<cost);
+  rollCostLabel.textContent="Gratis";
+  rollHint.textContent = state.upgrades.autoroll>0
+    ? `Tirando sola cada ${autorollInterval(state.upgrades.autoroll).toFixed(1)}s. ¡También puedes tirar tú cuando quieras!`
+    : "Tirar es gratis. ¡Tira todas las veces que quieras!";
+  rollBtn.disabled = rolling;
 }
 
 function buildReel(finalItem){
@@ -1231,17 +1238,10 @@ function buildReel(finalItem){
 function doRoll(){
   if(rolling) return;
   ensureAudio();
-  const cost=rollCost();
-  if(state.stats.totalRolls>0 && state.coins<cost) return;
 
   rolling=true;
   updateRollButton();
 
-  if(state.stats.totalRolls>0){
-    state.coins-=cost;
-    state.stats.coinsSpentTotal+=cost;
-    state.stats.paidRolls++;
-  }
   state.stats.totalRolls++;
 
   const won = weightedRollItem();
@@ -1470,7 +1470,7 @@ function itemCardHtml(item,activeEvt,theme){
   const rar=RARITIES[item.rarity];
   const isEq=state.equipped.includes(item.id);
   const isActiveEvt = item.event && activeEvt && item.id===activeEvt.id;
-  const evtBadge = item.event ? `<div class="badge-evt">${isActiveEvt?"🎪 HOY":"🎪"}</div>` : "";
+  const evtBadge = item.event ? `<div class="badge-evt">${isActiveEvt?"🎪 ACTIVO":"🎪"}</div>` : "";
   const themeBadge = `<div class="badge-theme">${theme==="ice"?"❄️":"🍃"}</div>`;
   if(!owned){
     return `<div class="item-card locked" data-rarity="${item.rarity}" style="--ic:${rar.color};--icg:${rar.glow};">
@@ -1478,7 +1478,7 @@ function itemCardHtml(item,activeEvt,theme){
       <div class="icon">❔</div>
       <div class="iname">???</div>
       <div class="irar" style="color:var(--text-2);">${rar.name}</div>
-      <div class="icount">${item.event&&!isActiveEvt?"Vuelve otro día":fmtDenom(item.denom)}</div>
+      <div class="icount">${item.event?(isActiveEvt?"¡Evento activo!":"Muy raro ahora"):fmtDenom(item.denom)}</div>
     </div>`;
   }
   return `<div class="item-card discovered ${isEq?"equipped":""}" data-id="${item.id}" data-rarity="${item.rarity}" style="--ic:${rar.color};--icg:${rar.glow};">
@@ -1547,6 +1547,7 @@ function buyUpgrade(key){
   ensureAudio(); sfxBuy();
   toast(`🔧 <b>${UPGRADES[key].name}</b> mejorado a nivel ${state.upgrades[key]}`);
   bumpMission("upgrade",1);
+  if(key==="autoroll") scheduleAutoroll();
   renderShop();
   renderTop();
   updateRollButton();
@@ -1642,10 +1643,11 @@ function renderDigPanel(){
   if(digBar) digBar.style.width=pct+"%";
   const label=document.getElementById("digProgressLabel");
   if(label) label.textContent=`Dureza: ${Math.max(0,state.dig.siteHardness)}/${state.dig.siteMaxHardness}`;
+  const maxE=effectiveMaxEnergy();
   const eBar=document.getElementById("energyBarFill");
-  if(eBar) eBar.style.width=Math.round(state.dig.energy/pick.maxEnergy*100)+"%";
+  if(eBar) eBar.style.width=Math.round(state.dig.energy/maxE*100)+"%";
   const eLabel=document.getElementById("energyLabel");
-  if(eLabel) eLabel.textContent=`Energía: ${state.dig.energy}/${pick.maxEnergy} (regenera 1 cada ${pick.regenSec}s)`;
+  if(eLabel) eLabel.textContent=`Energía: ${state.dig.energy}/${maxE} (regenera 1 cada ${pick.regenSec}s)`;
   const digBtn=document.getElementById("digBtn");
   if(digBtn) digBtn.disabled=state.dig.energy<=0;
 
@@ -1677,7 +1679,7 @@ function renderCollection(){
     const owned=state.items[item.id];
     const rar=RARITIES[item.rarity];
     const prob = normalizedProbPercent(item);
-    const tag = item.event ? ` <span class="subtle">🎪${item.id===activeEvt.id?" hoy":""}</span>` : "";
+    const tag = item.event ? ` <span class="subtle">🎪${item.id===activeEvt.id?" activo":" raro ahora"}</span>` : "";
     if(!owned){
       return `<tr style="opacity:.55;">
         <td>❔</td><td>???${tag}</td>
@@ -1826,21 +1828,21 @@ function renderMissions(){
    ========================================================= */
 function canPrestige(){ return state.stats.totalRolls>=1 || (state.dig&&state.dig.totalDigs>=1); }
 function prestigeGain(){
-  const g = Math.sqrt(state.stats.paidRolls)*1.2 + Object.keys(state.items).length*0.6 + Math.max(0,state.stats.highestRarity)*2;
+  const g = Math.sqrt(state.stats.totalRolls+(state.dig.totalDigs||0)*3)*1.2 + Object.keys(state.items).length*0.6 + Math.max(0,state.stats.highestRarity)*2;
   return Math.max(1,Math.floor(g));
 }
 function doPrestige(){
   if(!canPrestige()) return;
   const gain=prestigeGain();
-  const msg=`Vas a Renacer:\n\n· Perderás tus monedas y todas las mejoras de la tienda.\n· El coste de las tiradas volverá a su valor inicial.\n· Tu museo, objetos equipados y logros se conservan.\n\nA cambio, ganarás +${gain} Fragmentos de Legado PERMANENTES.\n\n¿Confirmas el renacimiento?`;
+  const msg=`Vas a Renacer:\n\n· Perderás tus monedas y todas las mejoras de la tienda.\n· Tu pico, tu museo, objetos equipados y logros se conservan.\n\nA cambio, ganarás +${gain} Fragmentos de Legado PERMANENTES.\n\n¿Confirmas el renacimiento?`;
   if(!confirm(msg)) return;
   state.prestige.points+=gain;
   state.prestige.count+=1;
   state.coins=0;
-  state.upgrades={luck:0,discount:0,income:0,slots:0,animSpeed:0};
-  state.stats.paidRolls=0;
+  state.upgrades={luck:0,autoroll:0,income:0,slots:0,animSpeed:0};
   state.stats.coinsSpentTotal=0;
   state.equipped=state.equipped.slice(0,maxSlots());
+  scheduleAutoroll();
   ensureAudio(); sfxAchievement();
   toast(`🌌 ¡Has renacido! +${gain} Fragmentos de Legado`);
   saveState();
@@ -1856,10 +1858,10 @@ function renderPrestige(){
       <div class="stat-card"><div class="stat-val">${fmt(state.prestige.points)}</div><div class="stat-lab">🌌 Fragmentos de Legado</div></div>
       <div class="stat-card"><div class="stat-val">+${(prestigeLuckBonus()*100).toFixed(0)}%</div><div class="stat-lab">🍀 Suerte permanente</div></div>
       <div class="stat-card"><div class="stat-val">+${(prestigeIncomeBonus()*100).toFixed(0)}%</div><div class="stat-lab">📈 Ingresos permanentes</div></div>
-      <div class="stat-card"><div class="stat-val">-${prestigeDiscountPct().toFixed(0)}%</div><div class="stat-lab">💰 Descuento de tirada permanente</div></div>
+      <div class="stat-card"><div class="stat-val">+${prestigeEnergyBonusPct().toFixed(0)}%</div><div class="stat-lab">⚡ Energía máx. de excavación permanente</div></div>
       <div class="stat-card"><div class="stat-val">${fmt(state.prestige.count)}</div><div class="stat-lab">🔁 Renacimientos totales</div></div>
     </div>
-    <div class="subtle" style="margin-bottom:14px;">${eligible?`Cuanto más hayas progresado (tiradas de pago, objetos y rareza más alta), más Fragmentos ganarás al renacer.`:"Haz al menos una tirada o una excavación para poder renacer."}</div>
+    <div class="subtle" style="margin-bottom:14px;">${eligible?`Cuanto más hayas progresado (tiradas, excavaciones, objetos y rareza más alta), más Fragmentos ganarás al renacer.`:"Haz al menos una tirada o una excavación para poder renacer."}</div>
     <button class="roll-btn" id="prestigeBtn" style="padding:14px 32px;font-size:1rem;" ${eligible?"":"disabled"}>
       🌌 RENACER${eligible?` (+${gain} Fragmentos)`:""}
     </button>
@@ -2079,11 +2081,12 @@ function renderEventBanner(){
   const h=Math.floor(ms/3600000), mnt=Math.floor((ms%3600000)/60000);
   el.style.setProperty("--ic",rar.color);
   el.style.setProperty("--icg",rar.glow);
+  const otherEvt=EVENT_ITEMS.find(i=>i.id!==evt.id);
   el.innerHTML=`
     <div class="event-icon">${evt.icon}</div>
     <div class="event-info">
-      <div class="event-title">🎪 Evento del día: <b>${evt.name}</b></div>
-      <div class="subtle">${fmtDenom(evt.denom)} · +${fmt(evt.cps)}/s ${owned?`· conseguido x${owned.count}`:"· disponible en esta tirada"}</div>
+      <div class="event-title">🎪 Evento activo: <b>${evt.name}</b> — ¡muchas más posibilidades ahora!</div>
+      <div class="subtle">${fmtDenom(evt.denom)} · +${fmt(evt.cps)}/s ${owned?`· conseguido x${owned.count}`:""} · ${otherEvt?otherEvt.name+" está muy raro mientras tanto":""}</div>
     </div>
     <div class="event-countdown">Cambia en ${h}h ${mnt}m</div>
   `;
@@ -2106,7 +2109,7 @@ setInterval(()=>{
   state.dig.regenProgress=(state.dig.regenProgress||0)+1;
   if(state.dig.regenProgress>=pick.regenSec){
     state.dig.regenProgress-=pick.regenSec;
-    if(state.dig.energy<pick.maxEnergy){
+    if(state.dig.energy<effectiveMaxEnergy()){
       state.dig.energy++;
       renderDigPanel();
     }
@@ -2164,6 +2167,7 @@ function fullRender(){
   renderEventBanner();
   renderDigPanel();
   buildReel(currentWorld().rollItems[0]);
+  scheduleAutoroll();
 }
 pendingOfflineReport = computeOfflineEarnings();
 fullRender();

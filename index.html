@@ -46,8 +46,33 @@ body{
   overflow-x:hidden;
   min-height:100vh;
 }
-#starfield{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.6;}
+#starfield{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.6;transition:opacity .6s ease;}
+body.theme-forest #starfield,body.theme-ice #starfield{opacity:0;}
 #particleCanvas{position:fixed;inset:0;z-index:60;pointer-events:none;}
+
+/* ---------- temas de mundo ---------- */
+body.theme-forest{
+  background:
+    radial-gradient(circle at 15% 0%, #1e3a24 0%, transparent 45%),
+    radial-gradient(circle at 85% 10%, #16321f 0%, transparent 45%),
+    linear-gradient(180deg, #06120a, #0a1810 40%, #0d1f13);
+}
+body.theme-ice{
+  background:
+    radial-gradient(circle at 15% 0%, #16324a 0%, transparent 45%),
+    radial-gradient(circle at 85% 10%, #1a3d5c 0%, transparent 45%),
+    linear-gradient(180deg, #030b14, #071624 40%, #0a2033);
+}
+#forestDecor{position:fixed;left:0;right:0;bottom:0;height:100px;z-index:0;pointer-events:none;display:none;overflow:hidden;opacity:.55;}
+body.theme-forest #forestDecor{display:flex;align-items:flex-end;justify-content:space-around;font-size:3.6rem;filter:brightness(.65) saturate(1.1);}
+#leafLayer,#snowLayer{position:fixed;inset:0;z-index:0;pointer-events:none;display:none;overflow:hidden;}
+body.theme-forest #leafLayer{display:block;}
+body.theme-ice #snowLayer{display:block;}
+.leaf,.snowflake{position:absolute;top:-10%;animation-timing-function:linear;animation-iteration-count:infinite;}
+.leaf{animation-name:leaffall;}
+.snowflake{animation-name:snowfall;color:#eaf6ff;}
+@keyframes leaffall{from{transform:translateY(-10vh) translateX(0) rotate(0deg);}to{transform:translateY(110vh) translateX(var(--drift,20px)) rotate(360deg);}}
+@keyframes snowfall{from{transform:translateY(-10vh) translateX(0);}to{transform:translateY(110vh) translateX(var(--drift,20px));}}
 ::-webkit-scrollbar{width:10px;height:10px;}
 ::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:10px;}
 ::-webkit-scrollbar-track{background:transparent;}
@@ -358,6 +383,33 @@ h2.section-title{
   position:absolute;top:6px;left:6px;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:999px;
   background:rgba(192,132,252,.25);color:#e9d5ff;border:1px solid rgba(192,132,252,.5);white-space:nowrap;
 }
+.item-card{position:relative;}
+.badge-theme{position:absolute;bottom:6px;right:6px;font-size:.9rem;opacity:.85;filter:drop-shadow(0 0 3px rgba(0,0,0,.6));}
+
+/* ---------- banner y tarjetas de mundo ---------- */
+.world-banner{
+  display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:14px;margin-bottom:18px;
+  background:var(--panel-light);border:1.5px solid var(--border-strong);
+}
+.world-banner-icon{font-size:2.2rem;}
+.world-banner-title{font-weight:800;font-size:1.05rem;}
+.world-banner.theme-ice{border-color:rgba(125,211,252,.5);box-shadow:0 0 20px -6px rgba(125,211,252,.5);}
+.world-banner.theme-forest{border-color:rgba(74,222,128,.4);box-shadow:0 0 20px -6px rgba(74,222,128,.4);}
+
+.world-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;}
+.world-card{
+  background:var(--panel);border:2px solid var(--border);border-radius:16px;padding:20px;text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:6px;transition:transform .18s ease, box-shadow .18s ease;
+}
+.world-card:hover{transform:translateY(-3px);}
+.world-card.active{border-color:var(--gold);box-shadow:0 0 24px -4px rgba(243,198,92,.6);}
+.world-card.locked{opacity:.65;}
+.world-card-icon{font-size:2.8rem;}
+.world-card-name{font-weight:800;font-size:1.05rem;}
+.world-card-progress{font-size:.72rem;color:var(--text-2);margin:6px 0 8px;}
+.world-card.theme-ice:not(.locked){box-shadow:0 0 20px -6px rgba(125,211,252,.4);}
+.world-card.theme-forest:not(.locked){box-shadow:0 0 20px -6px rgba(74,222,128,.3);}
+.world-select-btn{width:100%;}
 .item-card.locked{cursor:default;opacity:.75;}
 
 /* rarezas altas: brillo pulsante creciente */
@@ -464,6 +516,9 @@ footer.foot{text-align:center;color:var(--text-2);font-size:.72rem;margin-top:30
 </head>
 <body>
 <canvas id="starfield"></canvas>
+<div id="forestDecor"></div>
+<div id="leafLayer"></div>
+<div id="snowLayer"></div>
 <canvas id="particleCanvas"></canvas>
 <div id="flashOverlay"></div>
 <div id="epicVignette"></div>
@@ -480,6 +535,7 @@ footer.foot{text-align:center;color:var(--text-2);font-size:.72rem;margin-top:30
       <button class="tab-btn active" data-tab="roll">🎰 Tirar</button>
       <button class="tab-btn" data-tab="dig">⛏️ Excavar</button>
       <button class="tab-btn" data-tab="museum">🏛️ Museo</button>
+      <button class="tab-btn" data-tab="worlds">🌍 Mundos</button>
       <button class="tab-btn" data-tab="shop">🛒 Tienda</button>
       <button class="tab-btn" data-tab="collection">📖 Colección</button>
       <button class="tab-btn" data-tab="missions">🗓️ Misiones</button>
@@ -539,6 +595,15 @@ footer.foot{text-align:center;color:var(--text-2);font-size:.72rem;margin-top:30
     <!-- MUSEUM VIEW -->
     <section class="view" id="view-museum">
       <div class="rooms" id="roomsContainer"></div>
+    </section>
+
+    <!-- WORLDS VIEW -->
+    <section class="view" id="view-worlds">
+      <div class="panel">
+        <h2 class="section-title">🌍 Mundos</h2>
+        <p class="subtle" style="margin-top:-8px;margin-bottom:16px;">Elige en qué mundo quieres tirar, excavar y exponer tus objetos. Cada mundo tiene su propio museo y su propia temática.</p>
+        <div class="world-grid" id="worldGrid"></div>
+      </div>
     </section>
 
     <!-- SHOP VIEW -->
@@ -728,7 +793,39 @@ const EXCAVATION_ITEMS = [
   {id:"campana_templo",name:"Campana de Templo",         icon:"🔔", rarity:2, denom:14, cps:14, room:6, dig:true},
   {id:"brujula_perdida",name:"Brújula Perdida",          icon:"🧭", rarity:3, denom:25, cps:22, room:6, dig:true},
 ];
-const ALL_ITEMS = ITEMS.concat(EVENT_ITEMS).concat(EXCAVATION_ITEMS);
+
+/* --- Mundo 2: Reino de Hielo --- */
+const WORLD2_ITEMS = [
+  {id:"carambano",              name:"Carámbano de Cristal",         icon:"🧊", rarity:0, denom:2,      cps:1,    room:0},
+  {id:"copo_eterno",            name:"Copo de Nieve Eterno",         icon:"❄️", rarity:0, denom:3,      cps:1,    room:0},
+  {id:"pina_helada",            name:"Piña de Pino Helada",          icon:"🌲", rarity:1, denom:5,      cps:2,    room:0},
+  {id:"huella_zorro",           name:"Huella de Zorro Ártico",       icon:"🦊", rarity:1, denom:6,      cps:2,    room:0},
+  {id:"colmillo_morsa",         name:"Colmillo de Morsa",            icon:"🦷", rarity:2, denom:14,     cps:4,    room:1},
+  {id:"pluma_buho",             name:"Pluma de Búho Nival",          icon:"🦉", rarity:2, denom:18,     cps:5,    room:1},
+  {id:"cuerno_reno",            name:"Cuerno de Reno Mágico",        icon:"🦌", rarity:3, denom:38,     cps:9,    room:1},
+  {id:"gafas_runicas",          name:"Gafas de Nieve Rúnicas",       icon:"🥽", rarity:3, denom:44,     cps:9,    room:1},
+  {id:"corazon_glaciar",        name:"Corazón de Glaciar",           icon:"🏔️", rarity:4, denom:78,     cps:15,   room:2},
+  {id:"aliento_ventisquero",    name:"Aliento del Ventisquero",      icon:"🌬️", rarity:4, denom:88,     cps:16,   room:2},
+  {id:"aurora_nucleo",          name:"Núcleo de Aurora Boreal",      icon:"🌌", rarity:5, denom:240,    cps:30,   room:2},
+  {id:"colmillo_mamut_ancestral",name:"Colmillo de Mamut Ancestral", icon:"🐘", rarity:5, denom:260,    cps:31,   room:2},
+  {id:"zafiro_glacial",         name:"Zafiro Glacial",               icon:"🔹", rarity:6, denom:680,    cps:60,   room:3},
+  {id:"flor_hielo",             name:"Flor de Hielo Eterna",         icon:"🏵️", rarity:6, denom:720,    cps:63,   room:3},
+  {id:"tormenta_embotellada",   name:"Tormenta de Nieve Embotellada",icon:"🌨️", rarity:7, denom:1400,   cps:115,  room:3},
+  {id:"garra_yeti",             name:"Garra del Yeti",               icon:"🐾", rarity:7, denom:1650,   cps:128,  room:3},
+  {id:"castillo_hielo",         name:"Castillo de Hielo Eterno",     icon:"🏰", rarity:8, denom:5200,   cps:255,  room:4},
+  {id:"estrella_polar",         name:"Estrella Polar Eterna",        icon:"🌟", rarity:8, denom:5600,   cps:265,  room:4},
+  {id:"dragon_hielo",           name:"Dragón de Hielo Legendario",   icon:"🐉", rarity:9, denom:25000,  cps:620,  room:4},
+  {id:"corazon_invierno",       name:"Corazón del Invierno Eterno",  icon:"💙", rarity:9, denom:600000, cps:3800, room:4},
+];
+const WORLD2_ROOMS = [
+  {name:"Bosque Helado",    icon:"🌲"},
+  {name:"Fortaleza de Hielo", icon:"🛡️"},
+  {name:"Glaciar Perdido",  icon:"🏔️"},
+  {name:"Tundra Cósmica",   icon:"🌌"},
+  {name:"Trono Helado",     icon:"❄️"},
+];
+
+const ALL_ITEMS = ITEMS.concat(EVENT_ITEMS).concat(EXCAVATION_ITEMS).concat(WORLD2_ITEMS);
 const ITEM_MAP = Object.fromEntries(ALL_ITEMS.map(it=>[it.id,it]));
 
 const ROOMS = [
@@ -740,6 +837,29 @@ const ROOMS = [
   {name:"Sala de Eventos",         icon:"🎪"},
   {name:"Sala de Excavación",      icon:"⛏️"},
 ];
+
+const WORLD_DATA = [
+  {
+    id:0, name:"Bosque Ancestral", icon:"🌲", theme:"forest",
+    desc:"El museo original, escondido entre los árboles de un bosque milenario.",
+    rollItems:ITEMS, excavationItems:EXCAVATION_ITEMS,
+    museumItems:ITEMS.concat(EVENT_ITEMS).concat(EXCAVATION_ITEMS), rooms:ROOMS,
+  },
+  {
+    id:1, name:"Reino de Hielo", icon:"❄️", theme:"ice",
+    desc:"Un reino congelado repleto de reliquias árticas, reservado para quien haya completado el Bosque Ancestral.",
+    rollItems:WORLD2_ITEMS, excavationItems:[],
+    museumItems:WORLD2_ITEMS, rooms:WORLD2_ROOMS,
+    unlock:s=>ITEMS.concat(EXCAVATION_ITEMS).every(i=>s.items[i.id]),
+  },
+];
+function currentWorld(){ return WORLD_DATA[state.currentWorld||0]; }
+function isWorldUnlocked(w){ return !w.unlock || w.unlock(state); }
+function world1UnlockProgress(){
+  const need=ITEMS.concat(EXCAVATION_ITEMS);
+  const have=need.filter(i=>state.items[i.id]).length;
+  return {have, need:need.length};
+}
 
 /* --- minijuego de excavación --- */
 const PICKAXE_LEVELS = [
@@ -755,7 +875,17 @@ const PICKAXE_LEVELS = [
   {name:"Pico Legendario",  icon:"👑", power:42, maxEnergy:40, regenSec:1,   cost:300000},
 ];
 function currentPickaxe(){ return PICKAXE_LEVELS[state.dig.pickLevel]; }
-function randomSiteHardness(){ return 4+Math.floor(Math.random()*4); }
+function digHardnessGrowth(){ return Math.min(1+(state.dig.totalDigs||0)*0.035, 8); }
+function randomSiteHardness(){
+  const base=4+Math.random()*3;
+  return Math.max(3,Math.round(base*digHardnessGrowth()));
+}
+function digLuckBonus(){ return Math.min((state.dig.totalDigs||0)*0.02, 5); }
+function digWeight(item){
+  let w=1/item.denom;
+  if(item.rarity>=2) w*=(1+digLuckBonus());
+  return w;
+}
 function digComplete(s){ return EXCAVATION_ITEMS.every(i=>s.items[i.id]); }
 
 /* --- evento rotativo diario --- */
@@ -765,7 +895,10 @@ function msUntilNextEvent(){
   const next=(todayIndex()+1)*86400000;
   return Math.max(0,next-Date.now());
 }
-function activeRollPool(){ return ITEMS.concat([getActiveEventItem()]); }
+function activeRollPool(){
+  const w=currentWorld();
+  return w.id===0 ? w.rollItems.concat([getActiveEventItem()]) : w.rollItems;
+}
 
 const UPGRADES = {
   luck:      {name:"Suerte",                 icon:"🍀", max:20, base:50,  growth:1.6,  desc:lv=>`+${(lv*8)}% de peso a objetos Raros o superiores.`},
@@ -796,10 +929,21 @@ const ACHIEVEMENTS = [
   {id:"first_dig",    name:"Primera Excavación",   icon:"⛏️", desc:"Completa tu primera excavación.", reward:30, cond:s=>(s.dig&&s.dig.totalDigs||0)>=1},
   {id:"dig_master",   name:"Maestro Excavador",    icon:"🏺", desc:"Descubre los 6 objetos de la Sala de Excavación.", reward:500, cond:s=>digComplete(s)},
   {id:"pickaxe_max",  name:"Pico Legendario",      icon:"👑", desc:"Mejora tu pico al nivel máximo.", reward:2000, cond:s=>(s.dig&&s.dig.pickLevel||0)>=PICKAXE_LEVELS.length-1},
+  {id:"world2_unlock",name:"Las Puertas del Hielo", icon:"❄️", desc:"Desbloquea el Reino de Hielo.", reward:1000, cond:s=>ITEMS.concat(EXCAVATION_ITEMS).every(i=>s.items[i.id])},
+  {id:"ice_room0",    name:"Sala Helada: Bosque Helado", icon:"🌲", desc:"Completa la sala del Bosque Helado.", reward:200, cond:s=>world2RoomComplete(s,0)},
+  {id:"ice_room1",    name:"Sala Helada: Fortaleza de Hielo", icon:"🛡️", desc:"Completa la Fortaleza de Hielo.", reward:350, cond:s=>world2RoomComplete(s,1)},
+  {id:"ice_room2",    name:"Sala Helada: Glaciar Perdido", icon:"🏔️", desc:"Completa el Glaciar Perdido.", reward:550, cond:s=>world2RoomComplete(s,2)},
+  {id:"ice_room3",    name:"Sala Helada: Tundra Cósmica", icon:"🌌", desc:"Completa la Tundra Cósmica.", reward:900, cond:s=>world2RoomComplete(s,3)},
+  {id:"ice_room4",    name:"Sala Helada: Trono Helado", icon:"❄️", desc:"Completa el Trono Helado.", reward:4000, cond:s=>world2RoomComplete(s,4)},
+  {id:"world2_full",  name:"Emperador del Hielo",  icon:"🐉", desc:"Descubre los 20 objetos del Reino de Hielo.", reward:30000, cond:s=>WORLD2_ITEMS.every(i=>s.items[i.id])},
 ];
 
 function roomComplete(state, roomIdx){
   const roomItems = ITEMS.filter(i=>i.room===roomIdx);
+  return roomItems.every(i=>state.items[i.id]);
+}
+function world2RoomComplete(state, roomIdx){
+  const roomItems = WORLD2_ITEMS.filter(i=>i.room===roomIdx);
   return roomItems.every(i=>state.items[i.id]);
 }
 
@@ -822,7 +966,6 @@ const SAVE_KEY = "museumRngSave_v1";
 const OFFLINE_CAP_SECONDS = 8*3600;
 const PITY_SOFT_START = 40;
 const PITY_HARD_AT = 90;
-const PRESTIGE_MIN_PAID_ROLLS = 50;
 const DEFAULT_STATE = {
   coins:0,
   items:{},          // id -> {count, firstAt}
@@ -837,6 +980,7 @@ const DEFAULT_STATE = {
   prestige:{points:0, count:0},
   missions:null,     // se genera perezosamente con ensureDailyMissions()
   dig:{pickLevel:0, energy:10, siteHardness:5, siteMaxHardness:5, totalDigs:0, regenProgress:0},
+  currentWorld:0,
   soundOn:true,
   createdAt:Date.now(),
   lastActiveAt:Date.now(),
@@ -987,6 +1131,7 @@ function weightedRollItem(){
   return pickWeighted(pool, weights);
 }
 function poolForProbability(item){
+  if(item && WORLD2_ITEMS.includes(item)) return WORLD2_ITEMS;
   return item && item.event ? ITEMS.concat([item]) : ITEMS;
 }
 function normalizedProbPercent(item){
@@ -1195,6 +1340,7 @@ function finishRoll(won,isNew,isEpic){
   renderCollection();
   renderStats();
   renderPityBar();
+  renderPrestige();
 }
 
 function screenShake(strong){
@@ -1296,11 +1442,16 @@ document.getElementById("digBtn").addEventListener("click",doDig);
 function renderMuseum(){
   const container=document.getElementById("roomsContainer");
   const activeEvt=getActiveEventItem();
-  container.innerHTML = ROOMS.map((room,ri)=>{
-    const roomItems = ALL_ITEMS.filter(i=>i.room===ri);
+  const w=currentWorld();
+  const worldHeader=`<div class="world-banner theme-${w.theme}">
+      <div class="world-banner-icon">${w.icon}</div>
+      <div><div class="world-banner-title">${w.name}</div><div class="subtle">${w.desc}</div></div>
+    </div>`;
+  container.innerHTML = worldHeader + w.rooms.map((room,ri)=>{
+    const roomItems = w.museumItems.filter(i=>i.room===ri);
     const discoveredCount = roomItems.filter(i=>state.items[i.id]).length;
     const pct = Math.round(discoveredCount/roomItems.length*100);
-    const cards = roomItems.map(it=>itemCardHtml(it,activeEvt)).join("");
+    const cards = roomItems.map(it=>itemCardHtml(it,activeEvt,w.theme)).join("");
     return `<div class="room">
       <div class="room-header">
         <div class="room-title">${room.icon} ${room.name}</div>
@@ -1314,12 +1465,13 @@ function renderMuseum(){
     card.addEventListener("click",()=>toggleEquip(card.dataset.id));
   });
 }
-function itemCardHtml(item,activeEvt){
+function itemCardHtml(item,activeEvt,theme){
   const owned=state.items[item.id];
   const rar=RARITIES[item.rarity];
   const isEq=state.equipped.includes(item.id);
   const isActiveEvt = item.event && activeEvt && item.id===activeEvt.id;
   const evtBadge = item.event ? `<div class="badge-evt">${isActiveEvt?"🎪 HOY":"🎪"}</div>` : "";
+  const themeBadge = `<div class="badge-theme">${theme==="ice"?"❄️":"🍃"}</div>`;
   if(!owned){
     return `<div class="item-card locked" data-rarity="${item.rarity}" style="--ic:${rar.color};--icg:${rar.glow};">
       ${evtBadge}
@@ -1331,6 +1483,7 @@ function itemCardHtml(item,activeEvt){
   }
   return `<div class="item-card discovered ${isEq?"equipped":""}" data-id="${item.id}" data-rarity="${item.rarity}" style="--ic:${rar.color};--icg:${rar.glow};">
     ${isEq?'<div class="badge-eq">⭐</div>':evtBadge}
+    ${!isEq&&!item.event?themeBadge:""}
     <div class="icon">${item.icon}</div>
     <div class="iname">${item.name}</div>
     <div class="irar" style="color:${rar.color};">${rar.name}</div>
@@ -1424,7 +1577,9 @@ function doDig(){
   }
 }
 function completeDig(){
-  const won=pickWeighted(EXCAVATION_ITEMS, EXCAVATION_ITEMS.map(it=>1/it.denom));
+  const w=currentWorld();
+  const pool=w.rollItems.concat(w.excavationItems);
+  const won=pickWeighted(pool, pool.map(digWeight));
   const isNew=!state.items[won.id];
   if(!state.items[won.id]) state.items[won.id]={count:0,firstAt:Date.now()};
   state.items[won.id].count++;
@@ -1451,6 +1606,8 @@ function completeDig(){
   renderMuseum();
   renderCollection();
   renderStats();
+  renderPrestige();
+  renderWorlds();
   saveState();
 }
 function buyPickaxe(){
@@ -1477,7 +1634,9 @@ function renderDigPanel(){
       <div class="stat-card"><div class="stat-val">${pick.icon} ${pick.name}</div><div class="stat-lab">Pico actual</div></div>
       <div class="stat-card"><div class="stat-val">${pick.power}</div><div class="stat-lab">⛏️ Potencia por golpe</div></div>
       <div class="stat-card"><div class="stat-val">${fmt(state.dig.totalDigs||0)}</div><div class="stat-lab">🏺 Excavaciones completadas</div></div>
-    </div>`;
+      <div class="stat-card"><div class="stat-val">+${Math.round(digLuckBonus()*100)}%</div><div class="stat-lab">🍀 Suerte de excavación</div></div>
+    </div>
+    <p class="subtle" style="margin-top:10px;">Cuantas más excavaciones completes, más dura será la tierra pero más probable será encontrar objetos raros — de cualquier sala del museo.</p>`;
   const pct=Math.max(0,Math.min(100,Math.round((1-state.dig.siteHardness/state.dig.siteMaxHardness)*100)));
   const digBar=document.getElementById("digBarFill");
   if(digBar) digBar.style.width=pct+"%";
@@ -1514,7 +1673,7 @@ function renderDigPanel(){
 function renderCollection(){
   const body=document.getElementById("collectionBody");
   const activeEvt=getActiveEventItem();
-  body.innerHTML=ALL_ITEMS.map(item=>{
+  body.innerHTML=currentWorld().museumItems.map(item=>{
     const owned=state.items[item.id];
     const rar=RARITIES[item.rarity];
     const prob = normalizedProbPercent(item);
@@ -1566,7 +1725,7 @@ function checkAchievements(){
       any=true;
     }
   });
-  if(any){ renderAchievements(); renderTop(); }
+  if(any){ renderAchievements(); renderTop(); renderWorlds(); }
 }
 
 /* =========================================================
@@ -1665,7 +1824,7 @@ function renderMissions(){
 /* =========================================================
    PRESTIGIO / LEGADO
    ========================================================= */
-function canPrestige(){ return state.stats.paidRolls>=PRESTIGE_MIN_PAID_ROLLS; }
+function canPrestige(){ return state.stats.totalRolls>=1 || (state.dig&&state.dig.totalDigs>=1); }
 function prestigeGain(){
   const g = Math.sqrt(state.stats.paidRolls)*1.2 + Object.keys(state.items).length*0.6 + Math.max(0,state.stats.highestRarity)*2;
   return Math.max(1,Math.floor(g));
@@ -1700,8 +1859,7 @@ function renderPrestige(){
       <div class="stat-card"><div class="stat-val">-${prestigeDiscountPct().toFixed(0)}%</div><div class="stat-lab">💰 Descuento de tirada permanente</div></div>
       <div class="stat-card"><div class="stat-val">${fmt(state.prestige.count)}</div><div class="stat-lab">🔁 Renacimientos totales</div></div>
     </div>
-    <div class="upg-bar" style="margin-bottom:8px;"><div class="upg-bar-fill" style="width:${Math.min(100,Math.round(state.stats.paidRolls/PRESTIGE_MIN_PAID_ROLLS*100))}%;"></div></div>
-    <div class="subtle" style="margin-bottom:14px;">Tiradas de pago realizadas: ${state.stats.paidRolls}/${PRESTIGE_MIN_PAID_ROLLS} necesarias para poder renacer.</div>
+    <div class="subtle" style="margin-bottom:14px;">${eligible?`Cuanto más hayas progresado (tiradas de pago, objetos y rareza más alta), más Fragmentos ganarás al renacer.`:"Haz al menos una tirada o una excavación para poder renacer."}</div>
     <button class="roll-btn" id="prestigeBtn" style="padding:14px 32px;font-size:1rem;" ${eligible?"":"disabled"}>
       🌌 RENACER${eligible?` (+${gain} Fragmentos)`:""}
     </button>
@@ -1709,6 +1867,90 @@ function renderPrestige(){
   `;
   const btn=document.getElementById("prestigeBtn");
   if(btn) btn.addEventListener("click",doPrestige);
+}
+
+/* =========================================================
+   MUNDOS
+   ========================================================= */
+function renderWorlds(){
+  const grid=document.getElementById("worldGrid");
+  if(!grid) return;
+  const progress=world1UnlockProgress();
+  grid.innerHTML=WORLD_DATA.map(w=>{
+    const unlocked=isWorldUnlocked(w);
+    const active=(state.currentWorld||0)===w.id;
+    const discovered=w.museumItems.filter(i=>state.items[i.id]).length;
+    return `<div class="world-card theme-${w.theme} ${active?"active":""} ${unlocked?"":"locked"}">
+      <div class="world-card-icon">${unlocked?w.icon:"🔒"}</div>
+      <div class="world-card-name">${w.name}</div>
+      <div class="subtle">${w.desc}</div>
+      <div class="world-card-progress">${unlocked?`${discovered}/${w.museumItems.length} objetos descubiertos`:`Requiere completar el Bosque Ancestral (${progress.have}/${progress.need} objetos, sin contar la Sala de Eventos)`}</div>
+      <button class="buy-btn world-select-btn" data-world="${w.id}" ${(!unlocked||active)?"disabled":""}>
+        ${active?"✅ Mundo Actual":unlocked?"Viajar aquí":"🔒 Bloqueado"}
+      </button>
+    </div>`;
+  }).join("");
+  grid.querySelectorAll(".world-select-btn").forEach(btn=>{
+    btn.addEventListener("click",()=>selectWorld(parseInt(btn.dataset.world,10)));
+  });
+}
+function selectWorld(id){
+  const w=WORLD_DATA[id];
+  if(!w || !isWorldUnlocked(w) || (state.currentWorld||0)===id) return;
+  state.currentWorld=id;
+  ensureAudio(); sfxAchievement();
+  toast(`${w.icon} Has viajado a <b>${w.name}</b>`);
+  applyWorldTheme();
+  renderWorlds();
+  renderMuseum();
+  renderCollection();
+  renderEventBanner();
+  updateRollButton();
+  buildReel(currentWorld().rollItems[0]);
+  saveState();
+}
+function applyWorldTheme(){
+  const w=currentWorld();
+  document.body.classList.toggle("theme-forest", w.theme==="forest");
+  document.body.classList.toggle("theme-ice", w.theme==="ice");
+}
+function initWeatherLayers(){
+  const snow=document.getElementById("snowLayer");
+  if(snow && !snow.dataset.built){
+    for(let i=0;i<35;i++){
+      const f=document.createElement("span");
+      f.className="snowflake";
+      f.textContent="❄";
+      f.style.left=Math.random()*100+"%";
+      f.style.fontSize=(0.6+Math.random()*1.2)+"rem";
+      f.style.setProperty("--drift",(Math.random()*60-30)+"px");
+      f.style.animationDuration=(8+Math.random()*10)+"s";
+      f.style.animationDelay=(Math.random()*-14)+"s";
+      snow.appendChild(f);
+    }
+    snow.dataset.built="1";
+  }
+  const leaves=document.getElementById("leafLayer");
+  if(leaves && !leaves.dataset.built){
+    for(let i=0;i<20;i++){
+      const f=document.createElement("span");
+      f.className="leaf";
+      f.textContent="🍃";
+      f.style.left=Math.random()*100+"%";
+      f.style.fontSize=(0.8+Math.random()*1)+"rem";
+      f.style.setProperty("--drift",(Math.random()*80-40)+"px");
+      f.style.animationDuration=(10+Math.random()*8)+"s";
+      f.style.animationDelay=(Math.random()*-15)+"s";
+      leaves.appendChild(f);
+    }
+    leaves.dataset.built="1";
+  }
+  const forest=document.getElementById("forestDecor");
+  if(forest && !forest.dataset.built){
+    const trees=["🌲","🌳","🌲","🌳","🌲","🌳","🌲","🌳","🌲"];
+    forest.innerHTML=trees.map(t=>`<span>${t}</span>`).join("");
+    forest.dataset.built="1";
+  }
 }
 
 /* =========================================================
@@ -1825,6 +2067,11 @@ document.getElementById("resetBtn").addEventListener("click",()=>{
 function renderEventBanner(){
   const el=document.getElementById("eventBanner");
   if(!el) return;
+  if((state.currentWorld||0)!==0){
+    el.style.display="none";
+    return;
+  }
+  el.style.display="";
   const evt=getActiveEventItem();
   const owned=state.items[evt.id];
   const rar=RARITIES[evt.rarity];
@@ -1899,11 +2146,14 @@ document.getElementById("offlineClose").addEventListener("click",()=>{
    INIT
    ========================================================= */
 function fullRender(){
+  initWeatherLayers();
+  applyWorldTheme();
   renderTop();
   renderSoundToggle();
   updateRollButton();
   updateEquippedBar();
   renderMuseum();
+  renderWorlds();
   renderShop();
   renderCollection();
   renderAchievements();
@@ -1913,7 +2163,7 @@ function fullRender(){
   renderPityBar();
   renderEventBanner();
   renderDigPanel();
-  buildReel(ITEMS[0]);
+  buildReel(currentWorld().rollItems[0]);
 }
 pendingOfflineReport = computeOfflineEarnings();
 fullRender();

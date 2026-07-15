@@ -483,6 +483,8 @@ table.coll-table{width:100%;border-collapse:collapse;font-size:.82rem;min-width:
 table.coll-table th{text-align:left;padding:8px 10px;color:var(--text-1);font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border);}
 table.coll-table td{padding:9px 10px;border-bottom:1px solid var(--border);}
 table.coll-table tr:hover td{background:rgba(255,255,255,.02);}
+table.coll-table tr.coll-row{cursor:pointer;}
+table.coll-table tr.coll-row:hover td{background:rgba(124,157,255,.08);}
 .rar-pill{padding:2px 9px;border-radius:999px;font-size:.68rem;font-weight:700;display:inline-block;}
 
 /* ---------- achievements ---------- */
@@ -700,6 +702,7 @@ footer.foot{text-align:center;color:var(--text-2);font-size:.72rem;margin-top:30
       <span id="resultProb"></span>
       <span id="resultCps"></span>
     </div>
+    <div class="subtle" id="resultOwnedInfo" style="display:none;margin-bottom:14px;"></div>
     <button class="result-close" id="resultClose">Continuar</button>
   </div>
 </div>
@@ -1473,7 +1476,7 @@ function renderPityBar(){
   }
 }
 
-function showResultCard(item,isNew,isEpic,milestone){
+function showResultCard(item,isNew,isEpic,milestone,isPreview){
   const rar=RARITIES[item.rarity];
   const card=document.getElementById("resultCard");
   card.style.setProperty("--rc",rar.color);
@@ -1492,7 +1495,21 @@ function showResultCard(item,isNew,isEpic,milestone){
     else if(milestone==="legendary"){ mbadge.textContent="🌟 Tirada Legendaria"; mbadge.style.display="inline-block"; mbadge.className="result-milestone-badge legendary"; }
     else { mbadge.style.display="none"; }
   }
+  const ownedInfo=document.getElementById("resultOwnedInfo");
+  const owned=state.items[item.id];
+  if(isPreview && owned){
+    ownedInfo.textContent=`Conseguido x${owned.count} · descubierto el ${fmtDate(owned.firstAt)}`;
+    ownedInfo.style.display="block";
+  } else {
+    ownedInfo.style.display="none";
+  }
+  document.getElementById("resultClose").textContent = isPreview ? "Cerrar" : "Continuar";
   document.getElementById("resultOverlay").classList.add("show");
+}
+function previewItem(itemId){
+  const item=ITEM_MAP[itemId];
+  if(!item || !state.items[item.id]) return;
+  showResultCard(item,false,false,null,true);
 }
 document.getElementById("resultClose").addEventListener("click",()=>{
   document.getElementById("resultOverlay").classList.remove("show");
@@ -1783,7 +1800,7 @@ function renderCollection(){
         <td>${fmtDenom(item.denom)}</td><td>-</td><td>0</td><td>-</td>
       </tr>`;
     }
-    return `<tr>
+    return `<tr class="coll-row" data-id="${item.id}" title="Ver en grande">
       <td style="font-size:1.3rem;">${iconMarkup(item)}</td>
       <td><b>${item.name}</b>${tag}</td>
       <td><span class="rar-pill" style="background:${rar.glow};color:#0a0a12;">${rar.name}</span></td>
@@ -1793,6 +1810,9 @@ function renderCollection(){
       <td>${fmtDate(owned.firstAt)}</td>
     </tr>`;
   }).join("");
+  body.querySelectorAll(".coll-row").forEach(row=>{
+    row.addEventListener("click",()=>previewItem(row.dataset.id));
+  });
 }
 
 /* =========================================================

@@ -282,6 +282,8 @@ h2.section-title{
 .fusion-breakdown-title{font-weight:800;margin-bottom:12px;text-align:center;}
 .fusion-relic-note{margin-top:14px;padding:10px 14px;border-radius:10px;font-size:.78rem;text-align:center;background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.35);color:#67e8f9;}
 .fusion-relic-note.subtle{background:var(--panel-light);border-color:var(--border);color:var(--text-2);}
+.prestige-req{display:flex;flex-direction:column;gap:10px;max-width:460px;margin:0 auto;}
+.prestige-req-row{display:flex;flex-direction:column;gap:5px;font-size:.8rem;color:var(--text-1);}
 .fusion-craft-btn{display:block;margin:0 auto;padding:16px 46px;font-size:1.15rem;background:linear-gradient(135deg,#a78bfa,#f472b6,#a78bfa);background-size:220% 220%;}
 .fusion-craft-btn:disabled{opacity:.35;filter:grayscale(.5);cursor:not-allowed;animation:none;}
 
@@ -1245,7 +1247,7 @@ const DEFAULT_STATE = {
     playTimeSeconds:0, highestRarity:-1, mostValuableItemId:null,
     bestCommonStreak:0, currentCommonStreak:0, pityCounter:0, secretCounter:0, divineCounter:0, fusionsCompleted:0,
   },
-  prestige:{points:0, count:0},
+  prestige:{points:0, count:0, rollsAtLastPrestige:0, digsAtLastPrestige:0},
   missions:null,     // se genera perezosamente con ensureDailyMissions()
   dig:{pickLevel:0, energy:10, siteHardness:5, siteMaxHardness:5, totalDigs:0, regenProgress:0},
   currentWorld:0,
@@ -2377,7 +2379,17 @@ function renderMissions(){
 /* =========================================================
    PRESTIGIO / LEGADO
    ========================================================= */
-function canPrestige(){ return state.stats.totalRolls>=1 || (state.dig&&state.dig.totalDigs>=1); }
+function prestigeRequiredCoins(count){ return Math.floor(250*Math.pow(count+1,2)); }
+function prestigeRequiredActions(count){ return Math.floor(30*Math.pow(count+1,1.5)); }
+function prestigeActionsSince(){
+  const rolls = state.stats.totalRolls-(state.prestige.rollsAtLastPrestige||0);
+  const digs = (state.dig.totalDigs||0)-(state.prestige.digsAtLastPrestige||0);
+  return Math.max(0,rolls)+Math.max(0,digs);
+}
+function canPrestige(){
+  return state.coins>=prestigeRequiredCoins(state.prestige.count)
+    && prestigeActionsSince()>=prestigeRequiredActions(state.prestige.count);
+}
 function prestigeGain(){
   const g = Math.sqrt(state.stats.totalRolls+(state.dig.totalDigs||0)*3)*1.8 + Object.keys(state.items).length*0.9 + Math.max(0,state.stats.highestRarity)*3;
   return Math.max(2,Math.floor(g));
@@ -2389,6 +2401,8 @@ function doPrestige(){
   showConfirm(msg,()=>{
     state.prestige.points+=gain;
     state.prestige.count+=1;
+    state.prestige.rollsAtLastPrestige=state.stats.totalRolls;
+    state.prestige.digsAtLastPrestige=state.dig.totalDigs||0;
     state.coins=0;
     state.upgrades={luck:0,autoroll:0,income:0,slots:0,animSpeed:0};
     state.stats.coinsSpentTotal=0;
@@ -2418,6 +2432,12 @@ function renderPrestige(){
   if(!panel) return;
   const gain=prestigeGain();
   const eligible=canPrestige();
+  const reqCoins=prestigeRequiredCoins(state.prestige.count);
+  const reqActions=prestigeRequiredActions(state.prestige.count);
+  const haveCoins=Math.min(state.coins,reqCoins);
+  const haveActions=Math.min(prestigeActionsSince(),reqActions);
+  const coinsPct=Math.round(haveCoins/reqCoins*100);
+  const actionsPct=Math.round(haveActions/reqActions*100);
   panel.innerHTML=`
     <div class="stat-grid" style="margin-bottom:16px;">
       <div class="stat-card"><div class="stat-val">${fmt(state.prestige.points)}</div><div class="stat-lab">🌌 Fragmentos de Legado</div></div>
@@ -2426,11 +2446,21 @@ function renderPrestige(){
       <div class="stat-card"><div class="stat-val">+${prestigeEnergyBonusPct().toFixed(0)}%</div><div class="stat-lab">⚡ Energía máx. de excavación permanente</div></div>
       <div class="stat-card"><div class="stat-val">${fmt(state.prestige.count)}</div><div class="stat-lab">🔁 Renacimientos totales</div></div>
     </div>
-    <div class="subtle" style="margin-bottom:14px;">${eligible?`Cuanto más hayas progresado (tiradas, excavaciones, objetos y rareza más alta), más Fragmentos ganarás al renacer.`:"Haz al menos una tirada o una excavación para poder renacer."}</div>
-    <button class="roll-btn" id="prestigeBtn" style="padding:14px 32px;font-size:1rem;" ${eligible?"":"disabled"}>
+    <div class="subtle" style="margin-bottom:10px;">Cuanto más hayas progresado (tiradas, excavaciones, objetos y rareza más alta), más Fragmentos ganarás al renacer. Los requisitos suben un poco cada vez que renaces.</div>
+    <div class="prestige-req">
+      <div class="prestige-req-row">
+        <span>🪙 Monedas: ${fmt(haveCoins)}/${fmt(reqCoins)}</span>
+        <div class="fusion-tier-bar" style="flex:none;width:100%;"><div class="fusion-tier-bar-fill" style="width:${coinsPct}%;background:var(--gold);"></div></div>
+      </div>
+      <div class="prestige-req-row">
+        <span>🎲 Tiradas/excavaciones desde tu último renacimiento: ${fmt(haveActions)}/${fmt(reqActions)}</span>
+        <div class="fusion-tier-bar" style="flex:none;width:100%;"><div class="fusion-tier-bar-fill" style="width:${actionsPct}%;background:var(--accent);"></div></div>
+      </div>
+    </div>
+    <button class="roll-btn" id="prestigeBtn" style="padding:14px 32px;font-size:1rem;margin-top:14px;" ${eligible?"":"disabled"}>
       🌌 RENACER${eligible?` (+${gain} Fragmentos)`:""}
     </button>
-    ${!eligible?'<div class="roll-hint" style="margin-top:8px;">Sigue jugando para desbloquear tu primer renacimiento.</div>':""}
+    ${!eligible?'<div class="roll-hint" style="margin-top:8px;">Cumple los dos requisitos de arriba para poder renacer.</div>':""}
   `;
   const btn=document.getElementById("prestigeBtn");
   if(btn) btn.addEventListener("click",doPrestige);

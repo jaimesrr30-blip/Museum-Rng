@@ -229,6 +229,10 @@ h2.section-title{
 .event-countdown{font-size:.72rem;color:var(--text-2);white-space:nowrap;}
 
 /* ---------- pity ---------- */
+.autoroll-toggle-wrap{display:flex;justify-content:center;margin-top:14px;}
+.autoroll-toggle-wrap .tab-btn{font-size:.82rem;padding:8px 18px;}
+.autoroll-toggle-wrap .autoroll-on{border-color:rgba(74,222,128,.6);color:#bbf7d0;box-shadow:0 0 14px -2px rgba(74,222,128,.5);}
+.autoroll-toggle-wrap .autoroll-off{border-color:rgba(248,113,113,.5);color:#fecaca;}
 .pity-wrap{max-width:420px;margin:18px auto 0;}
 .pity-bar{height:8px;border-radius:5px;background:var(--panel-light);overflow:hidden;border:1px solid var(--border);}
 .pity-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .4s ease;}
@@ -338,6 +342,10 @@ h2.section-title{
 .result-name{font-size:1.3rem;font-weight:800;margin-bottom:10px;text-shadow:0 0 18px var(--rcg,transparent);}
 .result-meta{display:flex;justify-content:center;gap:14px;color:var(--text-1);font-size:.8rem;margin-bottom:16px;}
 .result-new-badge{display:inline-block;background:linear-gradient(90deg,var(--good),#22c55e);color:#04150b;font-weight:800;font-size:.7rem;padding:3px 10px;border-radius:999px;margin-bottom:10px;}
+.result-milestone-badge{display:inline-block;font-weight:800;font-size:.72rem;padding:4px 12px;border-radius:999px;margin-bottom:8px;letter-spacing:.3px;}
+.result-milestone-badge.legendary{background:linear-gradient(90deg,#fb923c,var(--gold));color:#2b1400;box-shadow:0 0 14px -2px rgba(251,146,60,.7);}
+.result-milestone-badge.diamond{background:linear-gradient(90deg,#38bdf8,#a78bfa,#38bdf8);background-size:200% 100%;color:#04102b;box-shadow:0 0 18px -2px rgba(56,189,248,.8);animation:milestoneShimmer 1.6s linear infinite;}
+@keyframes milestoneShimmer{to{background-position:200% 0;}}
 .result-close{
   margin-top:6px;padding:9px 26px;border-radius:10px;border:1px solid var(--border-strong);
   background:var(--panel-light);color:var(--text-0);cursor:pointer;font-weight:700;
@@ -374,6 +382,10 @@ h2.section-title{
 .item-card.discovered:hover{box-shadow:0 0 32px -2px var(--icg,transparent),0 0 0 1px var(--icg,transparent) inset;}
 .item-card.equipped{outline:2px solid var(--gold);outline-offset:2px;box-shadow:0 0 26px -2px rgba(243,198,92,.7);}
 .item-card .icon{font-size:2rem;margin-bottom:6px;filter:drop-shadow(0 0 6px var(--icg,transparent));}
+.pixel-icon{
+  width:1em;height:1em;vertical-align:middle;
+  image-rendering:pixelated;image-rendering:crisp-edges;-ms-interpolation-mode:nearest-neighbor;
+}
 .item-card.locked .icon{filter:brightness(0) opacity(.55);}
 .item-card .iname{font-size:.78rem;font-weight:700;margin-bottom:2px;min-height:2.1em;}
 .item-card .irar{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;text-shadow:0 0 8px currentColor;}
@@ -561,6 +573,9 @@ footer.foot{text-align:center;color:var(--text-2);font-size:.72rem;margin-top:30
           <button class="roll-btn" id="rollBtn">TIRAR<small id="rollCostLabel">Gratis</small></button>
           <div class="roll-hint" id="rollHint">Tu primera tirada es gratuita. ¡Pruébala!</div>
         </div>
+        <div class="autoroll-toggle-wrap" id="autorollToggleWrap" style="display:none;">
+          <button class="tab-btn autoroll-on" id="autorollToggleBtn">🔄 Auto-Tirada: ON</button>
+        </div>
         <div class="pity-wrap">
           <div class="pity-bar"><div class="pity-bar-fill" id="pityBarFill"></div></div>
           <div class="pity-label" id="pityLabel">Racha sin Épico+: 0/90</div>
@@ -676,6 +691,7 @@ footer.foot{text-align:center;color:var(--text-2);font-size:.72rem;margin-top:30
 
 <div id="resultOverlay">
   <div class="result-card" id="resultCard">
+    <div class="result-milestone-badge" id="resultMilestoneBadge" style="display:none;"></div>
     <div class="result-new-badge" id="resultNewBadge" style="display:none;">¡NUEVO DESCUBRIMIENTO!</div>
     <div class="result-icon" id="resultIcon"></div>
     <div class="result-rarity" id="resultRarity"></div>
@@ -779,8 +795,40 @@ const ITEMS = [
   {id:"corona_cosmica",  name:"Corona Cósmica",          icon:"🌟", rarity:9, denom:300000, cps:2500, room:4},
   {id:"ojo_infinito",    name:"Ojo del Infinito",        icon:"👁️", rarity:9, denom:500000, cps:3500, room:4},
 ];
+/* --- icono pixel-art (estilo Minecraft) para la Perla de Ender --- */
+function pixelIconSvg(grid, palette, cell){
+  cell = cell||4;
+  let rects="";
+  for(let r=0;r<grid.length;r++){
+    for(let c=0;c<grid[r].length;c++){
+      const v=grid[r][c];
+      if(!v) continue;
+      rects += `<rect x="${c*cell}" y="${r*cell}" width="${cell}" height="${cell}" fill="${palette[v]}"/>`;
+    }
+  }
+  const size = grid.length*cell;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges">${rects}</svg>`;
+  return "data:image/svg+xml;utf8,"+encodeURIComponent(svg);
+}
+const ENDER_PEARL_ICON = pixelIconSvg(
+  [
+    [0,0,1,1,1,1,0,0],
+    [0,1,4,2,1,1,1,0],
+    [1,1,2,1,1,3,1,1],
+    [1,2,1,1,1,1,2,1],
+    [1,1,1,3,1,1,1,1],
+    [1,1,2,1,1,2,1,1],
+    [0,1,1,1,2,1,1,0],
+    [0,0,1,1,1,1,0,0],
+  ],
+  {1:"#0c332f",2:"#1f6e63",3:"#8ff2df",4:"#eafff9"}
+);
+function iconMarkup(item){
+  return item.svgIcon ? `<img src="${item.svgIcon}" class="pixel-icon" alt="${item.name}">` : item.icon;
+}
+
 const EVENT_ITEMS = [
-  {id:"evt_ender_pearl",  name:"Perla de Ender",   icon:"🔮", rarity:6, denom:700,  cps:65,  room:5, event:true},
+  {id:"evt_ender_pearl",  name:"Perla de Ender",   icon:"🔮", svgIcon:ENDER_PEARL_ICON, rarity:6, denom:700,  cps:65,  room:5, event:true},
   {id:"evt_geometry_cube",name:"Cubo Saltarín",    icon:"🟧", rarity:8, denom:5000, cps:260, room:5, event:true},
 ];
 const EXCAVATION_ITEMS = [
@@ -990,6 +1038,7 @@ const DEFAULT_STATE = {
   missions:null,     // se genera perezosamente con ensureDailyMissions()
   dig:{pickLevel:0, energy:10, siteHardness:5, siteMaxHardness:5, totalDigs:0, regenProgress:0},
   currentWorld:0,
+  autorollOn:true,
   soundOn:true,
   createdAt:Date.now(),
   lastActiveAt:Date.now(),
@@ -1120,8 +1169,25 @@ function pickWeighted(pool, weights){
   }
   return pool[pool.length-1];
 }
-function weightedRollItem(){
+const MILESTONE_LEGENDARY_EVERY = 10;
+const MILESTONE_DIAMOND_EVERY = 100;
+function milestoneForRoll(n){
+  if(n>0 && n%MILESTONE_DIAMOND_EVERY===0) return "diamond";
+  if(n>0 && n%MILESTONE_LEGENDARY_EVERY===0) return "legendary";
+  return null;
+}
+function weightedRollItem(milestone){
   const pool = activeRollPool();
+  if(milestone==="diamond"){
+    const filtered = pool.filter(it=>it.rarity>=7);
+    const weights = filtered.map(it=>luckWeight(it)*(1+(it.rarity-7)*2.5));
+    return pickWeighted(filtered, weights);
+  }
+  if(milestone==="legendary"){
+    const filtered = pool.filter(it=>it.rarity>=4);
+    const weights = filtered.map(it=>luckWeight(it)*(1+(it.rarity-4)*0.8));
+    return pickWeighted(filtered, weights);
+  }
   const pity = state.stats.pityCounter||0;
   if(pity>=PITY_HARD_AT){
     const rarePool = pool.filter(it=>it.rarity>=3);
@@ -1196,11 +1262,31 @@ let autorollTimer=null;
 function scheduleAutoroll(){
   if(autorollTimer){ clearTimeout(autorollTimer); autorollTimer=null; }
   const lv=state.upgrades.autoroll;
-  if(!lv) return;
+  if(!lv || !state.autorollOn) return;
   autorollTimer=setTimeout(()=>{
     if(!rolling) doRoll();
     scheduleAutoroll();
   }, autorollInterval(lv)*1000);
+}
+function toggleAutoroll(){
+  if(!state.upgrades.autoroll) return;
+  state.autorollOn=!state.autorollOn;
+  scheduleAutoroll();
+  renderAutorollToggle();
+  saveState();
+}
+function renderAutorollToggle(){
+  const wrap=document.getElementById("autorollToggleWrap");
+  const btn=document.getElementById("autorollToggleBtn");
+  if(!wrap||!btn) return;
+  if(!state.upgrades.autoroll){
+    wrap.style.display="none";
+    return;
+  }
+  wrap.style.display="flex";
+  btn.textContent = state.autorollOn ? "🔄 Auto-Tirada: ON" : "⏸️ Auto-Tirada: OFF";
+  btn.classList.toggle("autoroll-on", state.autorollOn);
+  btn.classList.toggle("autoroll-off", !state.autorollOn);
 }
 
 function animDuration(){
@@ -1211,7 +1297,7 @@ function animDuration(){
 
 function updateRollButton(){
   rollCostLabel.textContent="Gratis";
-  rollHint.textContent = state.upgrades.autoroll>0
+  rollHint.textContent = (state.upgrades.autoroll>0 && state.autorollOn)
     ? `Tirando sola cada ${autorollInterval(state.upgrades.autoroll).toFixed(1)}s. ¡También puedes tirar tú cuando quieras!`
     : "Tirar es gratis. ¡Tira todas las veces que quieras!";
   rollBtn.disabled = rolling;
@@ -1228,7 +1314,7 @@ function buildReel(finalItem){
     const cell=document.createElement("div");
     cell.className="reel-cell";
     const it = (i===targetIndex) ? finalItem : pool[Math.floor(Math.random()*pool.length)];
-    cell.textContent=it.icon;
+    cell.innerHTML=iconMarkup(it);
     cell.style.borderColor = i===targetIndex ? "transparent" : "";
     reelTrack.appendChild(cell);
   }
@@ -1243,8 +1329,11 @@ function doRoll(){
   updateRollButton();
 
   state.stats.totalRolls++;
+  const milestone = milestoneForRoll(state.stats.totalRolls);
+  if(milestone==="diamond") toast(`💎 <b>¡Tirada de Diamante!</b><br>Cada ${MILESTONE_DIAMOND_EVERY} tiradas · objeto Prohibido o superior garantizado`);
+  else if(milestone==="legendary") toast(`🌟 <b>¡Tirada Legendaria!</b><br>Cada ${MILESTONE_LEGENDARY_EVERY} tiradas · objeto Legendario o superior garantizado`);
 
-  const won = weightedRollItem();
+  const won = weightedRollItem(milestone);
   const isNew = !state.items[won.id];
   if(!state.items[won.id]) state.items[won.id]={count:0,firstAt:Date.now()};
   state.items[won.id].count++;
@@ -1263,7 +1352,7 @@ function doRoll(){
   bumpMission("rolls",1);
   if(won.rarity>=2) bumpMission("rare",1);
 
-  const isEpic = won.rarity>=8; // Secreto / Divino: animación de suspense cinematográfico
+  const isEpic = won.rarity>=8 || milestone==="diamond"; // Secreto / Divino o tirada de diamante: animación de suspense cinematográfico
   document.documentElement.style.setProperty("--anim-dur", animDuration()+"s");
   const targetIndex=buildReel(won);
   const viewport=reelTrack.parentElement;
@@ -1295,7 +1384,7 @@ function doRoll(){
       setTimeout(()=>{
         viewport.classList.remove("epic-suspense");
         hideEpicVignette();
-        finishRoll(won,isNew,true);
+        finishRoll(won,isNew,true,milestone);
       },totalMs+150);
     });
   } else {
@@ -1309,12 +1398,12 @@ function doRoll(){
     });
     const durMs=parseFloat(animDuration())*1000;
     setTimeout(()=>{
-      finishRoll(won,isNew,false);
+      finishRoll(won,isNew,false,milestone);
     },durMs+120);
   }
 }
 
-function finishRoll(won,isNew,isEpic){
+function finishRoll(won,isNew,isEpic,milestone){
   rolling=false;
   const cells=reelTrack.querySelectorAll(".reel-cell");
   if(cells[40]) cells[40].classList.add("landing");
@@ -1328,7 +1417,7 @@ function finishRoll(won,isNew,isEpic){
     setTimeout(()=>burstParticles(won.rarity),560);
   }
 
-  showResultCard(won,isNew,isEpic);
+  showResultCard(won,isNew,isEpic,milestone);
   addRecentPull(won);
   updateEquippedBar();
   renderTop();
@@ -1384,19 +1473,25 @@ function renderPityBar(){
   }
 }
 
-function showResultCard(item,isNew,isEpic){
+function showResultCard(item,isNew,isEpic,milestone){
   const rar=RARITIES[item.rarity];
   const card=document.getElementById("resultCard");
   card.style.setProperty("--rc",rar.color);
   card.style.setProperty("--rcg",rar.glow);
   card.classList.toggle("epic",!!isEpic);
-  document.getElementById("resultIcon").textContent=item.icon;
+  document.getElementById("resultIcon").innerHTML=iconMarkup(item);
   document.getElementById("resultRarity").textContent=rar.name+(item.event?" · Evento":"")+(item.dig?" · Excavación":"");
   document.getElementById("resultRarity").style.color=rar.color;
   document.getElementById("resultName").textContent=item.name;
   document.getElementById("resultProb").textContent="🎯 "+fmtDenom(item.denom);
   document.getElementById("resultCps").textContent="⚡ +"+fmt(item.cps)+"/s";
   document.getElementById("resultNewBadge").style.display = isNew ? "inline-block" : "none";
+  const mbadge=document.getElementById("resultMilestoneBadge");
+  if(mbadge){
+    if(milestone==="diamond"){ mbadge.textContent="💎 Tirada de Diamante"; mbadge.style.display="inline-block"; mbadge.className="result-milestone-badge diamond"; }
+    else if(milestone==="legendary"){ mbadge.textContent="🌟 Tirada Legendaria"; mbadge.style.display="inline-block"; mbadge.className="result-milestone-badge legendary"; }
+    else { mbadge.style.display="none"; }
+  }
   document.getElementById("resultOverlay").classList.add("show");
 }
 document.getElementById("resultClose").addEventListener("click",()=>{
@@ -1413,7 +1508,7 @@ function addRecentPull(item){
   recentPullsData=recentPullsData.slice(0,14);
   recentPullsEl.innerHTML=recentPullsData.map(it=>{
     const rar=RARITIES[it.rarity];
-    return `<div class="recent-chip" title="${it.name} (${rar.name})" style="border-color:${rar.color};box-shadow:0 0 8px -2px ${rar.glow};">${it.icon}</div>`;
+    return `<div class="recent-chip" title="${it.name} (${rar.name})" style="border-color:${rar.color};box-shadow:0 0 8px -2px ${rar.glow};">${iconMarkup(it)}</div>`;
   }).join("");
 }
 
@@ -1425,7 +1520,7 @@ function updateEquippedBar(){
     const id=state.equipped[i];
     if(id){
       const it=ITEM_MAP[id]; const rar=RARITIES[it.rarity];
-      html+=`<div class="equip-slot filled" style="border-color:${rar.color};" title="${it.name}">${it.icon}<span class="mini-cps">+${fmt(it.cps)}/s</span></div>`;
+      html+=`<div class="equip-slot filled" style="border-color:${rar.color};" title="${it.name}">${iconMarkup(it)}<span class="mini-cps">+${fmt(it.cps)}/s</span></div>`;
     } else {
       html+=`<div class="equip-slot">➕</div>`;
     }
@@ -1435,6 +1530,7 @@ function updateEquippedBar(){
 
 rollBtn.addEventListener("click",doRoll);
 document.getElementById("digBtn").addEventListener("click",doDig);
+document.getElementById("autorollToggleBtn").addEventListener("click",toggleAutoroll);
 
 /* =========================================================
    RENDER: MUSEUM
@@ -1484,7 +1580,7 @@ function itemCardHtml(item,activeEvt,theme){
   return `<div class="item-card discovered ${isEq?"equipped":""}" data-id="${item.id}" data-rarity="${item.rarity}" style="--ic:${rar.color};--icg:${rar.glow};">
     ${isEq?'<div class="badge-eq">⭐</div>':evtBadge}
     ${!isEq&&!item.event?themeBadge:""}
-    <div class="icon">${item.icon}</div>
+    <div class="icon">${iconMarkup(item)}</div>
     <div class="iname">${item.name}</div>
     <div class="irar" style="color:${rar.color};">${rar.name}</div>
     <div class="icount">x${owned.count} · +${fmt(item.cps)}/s</div>
@@ -1547,7 +1643,7 @@ function buyUpgrade(key){
   ensureAudio(); sfxBuy();
   toast(`🔧 <b>${UPGRADES[key].name}</b> mejorado a nivel ${state.upgrades[key]}`);
   bumpMission("upgrade",1);
-  if(key==="autoroll") scheduleAutoroll();
+  if(key==="autoroll"){ scheduleAutoroll(); renderAutorollToggle(); }
   renderShop();
   renderTop();
   updateRollButton();
@@ -1688,7 +1784,7 @@ function renderCollection(){
       </tr>`;
     }
     return `<tr>
-      <td style="font-size:1.3rem;">${item.icon}</td>
+      <td style="font-size:1.3rem;">${iconMarkup(item)}</td>
       <td><b>${item.name}</b>${tag}</td>
       <td><span class="rar-pill" style="background:${rar.glow};color:#0a0a12;">${rar.name}</span></td>
       <td>${fmtDenom(item.denom)} <span class="subtle">(${prob.toFixed(prob<0.01?4:2)}%)</span></td>
@@ -1748,7 +1844,7 @@ function renderStats(){
     ["🛍️ Monedas gastadas", fmt(state.stats.coinsSpentTotal)],
     ["⏱️ Tiempo jugado", fmtTime(state.stats.playTimeSeconds)],
     ["🔥 Mejor racha común", fmt(state.stats.bestCommonStreak)],
-    ["💎 Objeto más valioso", mostVal ? `${mostVal.icon} ${mostVal.name}` : "-"],
+    ["💎 Objeto más valioso", mostVal ? `${iconMarkup(mostVal)} ${mostVal.name}` : "-"],
     ["🏆 Logros", `${Object.keys(state.achievements).length}/${ACHIEVEMENTS.length}`],
     ["🌌 Renacimientos", fmt(state.prestige.count)],
   ];
@@ -2083,7 +2179,7 @@ function renderEventBanner(){
   el.style.setProperty("--icg",rar.glow);
   const otherEvt=EVENT_ITEMS.find(i=>i.id!==evt.id);
   el.innerHTML=`
-    <div class="event-icon">${evt.icon}</div>
+    <div class="event-icon">${iconMarkup(evt)}</div>
     <div class="event-info">
       <div class="event-title">🎪 Evento activo: <b>${evt.name}</b> — ¡muchas más posibilidades ahora!</div>
       <div class="subtle">${fmtDenom(evt.denom)} · +${fmt(evt.cps)}/s ${owned?`· conseguido x${owned.count}`:""} · ${otherEvt?otherEvt.name+" está muy raro mientras tanto":""}</div>
@@ -2168,6 +2264,7 @@ function fullRender(){
   renderDigPanel();
   buildReel(currentWorld().rollItems[0]);
   scheduleAutoroll();
+  renderAutorollToggle();
 }
 pendingOfflineReport = computeOfflineEarnings();
 fullRender();

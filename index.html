@@ -262,6 +262,27 @@ h2.section-title{
 .dig-btn{padding:16px 46px;font-size:1.15rem;background:linear-gradient(135deg,#a9662f,#d99048,#a9662f);background-size:220% 220%;}
 .energy-wrap{width:100%;max-width:320px;}
 
+/* ---------- máquina de fusión ---------- */
+.fusion-slots{display:flex;justify-content:center;gap:16px;margin-bottom:6px;flex-wrap:wrap;}
+.fusion-slot{
+  width:84px;height:84px;border-radius:16px;border:2px dashed var(--border-strong);
+  display:flex;align-items:center;justify-content:center;font-size:2.4rem;background:var(--panel-light);
+  cursor:pointer;transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.fusion-slot:hover{transform:translateY(-3px);}
+.fusion-slot.filled{border-style:solid;box-shadow:0 0 18px -4px currentColor;}
+.fusion-slot.active{border-color:var(--accent);box-shadow:0 0 16px -2px rgba(124,157,255,.6);}
+.fusion-picker{margin-top:6px;max-height:340px;overflow-y:auto;padding:4px;}
+.fusion-info{max-width:480px;margin:18px auto;}
+.fusion-tier-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;font-size:.78rem;}
+.fusion-tier-name{width:100px;flex:0 0 100px;font-weight:700;text-align:right;}
+.fusion-tier-bar{flex:1;height:8px;border-radius:5px;background:var(--panel-light);overflow:hidden;border:1px solid var(--border);}
+.fusion-tier-bar-fill{height:100%;transition:width .3s ease;}
+.fusion-tier-pct{width:60px;flex:0 0 60px;text-align:left;color:var(--text-1);font-variant-numeric:tabular-nums;}
+.fusion-breakdown-title{font-weight:800;margin-bottom:12px;text-align:center;}
+.fusion-craft-btn{display:block;margin:0 auto;padding:16px 46px;font-size:1.15rem;background:linear-gradient(135deg,#a78bfa,#f472b6,#a78bfa);background-size:220% 220%;}
+.fusion-craft-btn:disabled{opacity:.35;filter:grayscale(.5);cursor:not-allowed;animation:none;}
+
 /* ---------- shake / screen effects ---------- */
 .shake{animation:shakeAnim .4s ease;}
 .shake-strong{animation:shakeStrongAnim .7s ease;}
@@ -347,6 +368,7 @@ h2.section-title{
 .result-milestone-badge{display:inline-block;font-weight:800;font-size:.72rem;padding:4px 12px;border-radius:999px;margin-bottom:8px;letter-spacing:.3px;}
 .result-milestone-badge.legendary{background:linear-gradient(90deg,#fb923c,var(--gold));color:#2b1400;box-shadow:0 0 14px -2px rgba(251,146,60,.7);}
 .result-milestone-badge.diamond{background:linear-gradient(90deg,#38bdf8,#a78bfa,#38bdf8);background-size:200% 100%;color:#04102b;box-shadow:0 0 18px -2px rgba(56,189,248,.8);animation:milestoneShimmer 1.6s linear infinite;}
+.result-milestone-badge.fusion{background:linear-gradient(90deg,#a78bfa,#f472b6,#a78bfa);background-size:200% 100%;color:#1a0b2e;box-shadow:0 0 18px -2px rgba(167,139,250,.8);animation:milestoneShimmer 1.6s linear infinite;}
 @keyframes milestoneShimmer{to{background-position:200% 0;}}
 .result-close{
   margin-top:6px;padding:9px 26px;border-radius:10px;border:1px solid var(--border-strong);
@@ -363,6 +385,74 @@ h2.section-title{
 }
 #offlineOverlay.show{display:flex;}
 .offline-card{border-color:var(--gold);box-shadow:0 0 60px rgba(243,198,92,.4),0 20px 50px rgba(0,0,0,.5);}
+
+/* ---------- modal de confirmación (reemplaza confirm() nativo, bloqueado en iframes) ---------- */
+#confirmOverlay{
+  position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;
+  background:rgba(4,6,14,.7);backdrop-filter:blur(4px);
+}
+#confirmOverlay.show{display:flex;}
+.confirm-card{border-color:var(--border-strong);box-shadow:0 20px 60px rgba(0,0,0,.6);}
+.confirm-message{font-size:.95rem;line-height:1.5;color:var(--text-0);white-space:pre-line;margin-bottom:18px;}
+.confirm-actions{display:flex;gap:10px;justify-content:center;}
+.confirm-ok-btn{padding:10px 26px;font-size:.95rem;}
+
+/* ---------- vórtice de fusión ---------- */
+.fusion-vortex{
+  position:fixed;inset:0;z-index:65;display:none;align-items:center;justify-content:center;flex-direction:column;gap:24px;
+  background:radial-gradient(ellipse at 50% 45%, rgba(40,14,64,.35) 0%, rgba(4,2,12,.92) 65%);
+}
+.fusion-vortex.show{display:flex;}
+.fusion-stage{position:relative;width:200px;height:200px;display:flex;align-items:center;justify-content:center;}
+.fusion-ring{
+  width:180px;height:180px;border-radius:50%;
+  background:conic-gradient(from 0deg,#a78bfa,#f472b6,#38bdf8,#fbbf24,#a78bfa);
+  filter:blur(4px);
+  box-shadow:0 0 70px 12px rgba(167,139,250,.65);
+  animation:fusionRing 1.3s linear infinite;
+}
+@keyframes fusionRing{
+  0%{transform:scale(.8) rotate(0deg);}
+  50%{transform:scale(1.18) rotate(180deg);}
+  100%{transform:scale(.8) rotate(360deg);}
+}
+.fusion-orbit{position:absolute;inset:0;}
+.fusion-orbit-icon{
+  position:absolute;top:50%;left:50%;font-size:2.2rem;margin:-1.1rem;
+  transform:rotate(var(--ang)) translate(120px) rotate(calc(-1*var(--ang))) scale(1);
+  animation:fusionConverge 2.5s ease-in forwards;
+}
+.fusion-orbit-icon .pixel-icon{width:1em;height:1em;}
+@keyframes fusionConverge{
+  0%{transform:rotate(var(--ang)) translate(120px) rotate(calc(-1*var(--ang))) scale(1);opacity:1;}
+  75%{opacity:1;}
+  100%{transform:rotate(var(--ang)) translate(0px) rotate(calc(-1*var(--ang))) scale(.15);opacity:0;}
+}
+.fusion-vortex-text{font-size:1.25rem;font-weight:800;color:#fff;text-shadow:0 0 20px rgba(167,139,250,.9);letter-spacing:1px;}
+
+/* ---------- animación de renacimiento ---------- */
+.rebirth-overlay{
+  position:fixed;inset:0;z-index:85;display:none;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at 50% 45%, rgba(60,20,90,.4) 0%, rgba(3,2,10,.94) 70%);
+}
+.rebirth-overlay.show{display:flex;}
+.rebirth-ring{
+  position:absolute;width:340px;height:340px;border-radius:50%;
+  background:conic-gradient(from 0deg,var(--gold),#a78bfa,#38bdf8,#f472b6,var(--gold));
+  filter:blur(10px);opacity:.8;
+  animation:rebirthRingSpin 2.4s linear infinite;
+}
+@keyframes rebirthRingSpin{
+  0%{transform:scale(.7) rotate(0deg);}
+  50%{transform:scale(1.05) rotate(180deg);}
+  100%{transform:scale(.7) rotate(360deg);}
+}
+.rebirth-content{position:relative;text-align:center;animation:rebirthPop 1s cubic-bezier(.2,.9,.3,1.2);}
+@keyframes rebirthPop{0%{transform:scale(.3);opacity:0;}60%{transform:scale(1.1);opacity:1;}100%{transform:scale(1);}}
+.rebirth-icon{font-size:5rem;filter:drop-shadow(0 0 30px rgba(243,198,92,.8));animation:rebirthIconSpin 3s linear infinite;}
+@keyframes rebirthIconSpin{to{transform:rotate(360deg);}}
+.rebirth-title{font-size:1.8rem;font-weight:900;letter-spacing:1px;color:#fff;text-shadow:0 0 24px rgba(167,139,250,.9);margin-top:10px;}
+.rebirth-gain{font-size:1.15rem;font-weight:800;color:var(--gold);text-shadow:0 0 16px rgba(243,198,92,.7);margin-top:8px;}
 
 /* ---------- museum ---------- */
 .rooms{display:flex;flex-direction:column;gap:18px;}
@@ -555,6 +645,7 @@ footer.foot{text-align:center;color:var(--text-2);font-size:.72rem;margin-top:30
       <button class="tab-btn" data-tab="shop">🛒 Tienda</button>
       <button class="tab-btn" data-tab="collection">📖 Colección</button>
       <button class="tab-btn" data-tab="missions">🗓️ Misiones</button>
+      <button class="tab-btn" data-tab="fusion">🔮 Fusión</button>
       <button class="tab-btn" data-tab="prestige">🌌 Legado</button>
       <button class="tab-btn" data-tab="achievements">🏆 Logros</button>
       <button class="tab-btn" data-tab="stats">📊 Estadísticas</button>
@@ -665,6 +756,18 @@ footer.foot{text-align:center;color:var(--text-2);font-size:.72rem;margin-top:30
       </div>
     </section>
 
+    <!-- FUSION VIEW -->
+    <section class="view" id="view-fusion">
+      <div class="panel">
+        <h2 class="section-title">🔮 Máquina de Fusión</h2>
+        <p class="subtle" style="margin-top:-8px;margin-bottom:16px;">Elige 3 objetos duplicados (pueden ser iguales o distintos) y fabrica uno nuevo. Cuanto más raros sean los ingredientes, mejor será el resultado.</p>
+        <div class="fusion-slots" id="fusionSlots"></div>
+        <div class="item-grid fusion-picker" id="fusionPicker" style="display:none;margin-top:14px;"></div>
+        <div class="fusion-info" id="fusionInfo"></div>
+        <button class="roll-btn fusion-craft-btn" id="fusionCraftBtn" disabled>🔮 FABRICAR</button>
+      </div>
+    </section>
+
     <!-- PRESTIGE VIEW -->
     <section class="view" id="view-prestige">
       <div class="panel">
@@ -726,6 +829,34 @@ footer.foot{text-align:center;color:var(--text-2);font-size:.72rem;margin-top:30
       <span id="offlineCoins" style="font-size:1.3rem;font-weight:800;color:var(--gold);text-shadow:0 0 14px rgba(243,198,92,.6);"></span>
     </div>
     <button class="result-close" id="offlineClose">Recoger</button>
+  </div>
+</div>
+
+<div id="confirmOverlay">
+  <div class="result-card confirm-card">
+    <div class="result-icon">❓</div>
+    <div class="confirm-message" id="confirmMessage"></div>
+    <div class="confirm-actions">
+      <button class="result-close" id="confirmCancelBtn">Cancelar</button>
+      <button class="roll-btn confirm-ok-btn" id="confirmOkBtn">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<div class="fusion-vortex" id="fusionVortex">
+  <div class="fusion-stage">
+    <div class="fusion-ring"></div>
+    <div class="fusion-orbit" id="fusionOrbitIcons"></div>
+  </div>
+  <div class="fusion-vortex-text">🔮 Fusionando...</div>
+</div>
+
+<div class="rebirth-overlay" id="rebirthOverlay">
+  <div class="rebirth-ring"></div>
+  <div class="rebirth-content">
+    <div class="rebirth-icon">🌌</div>
+    <div class="rebirth-title">¡HAS RENACIDO!</div>
+    <div class="rebirth-gain" id="rebirthGainText">+0 Fragmentos de Legado</div>
   </div>
 </div>
 
@@ -1006,6 +1137,8 @@ const ACHIEVEMENTS = [
   {id:"ice_room3",    name:"Sala Helada: Tundra Cósmica", icon:"🌌", desc:"Completa la Tundra Cósmica.", reward:900, cond:s=>world2RoomComplete(s,3)},
   {id:"ice_room4",    name:"Sala Helada: Trono Helado", icon:"❄️", desc:"Completa el Trono Helado.", reward:4000, cond:s=>world2RoomComplete(s,4)},
   {id:"world2_full",  name:"Emperador del Hielo",  icon:"🐉", desc:"Descubre los 20 objetos del Reino de Hielo.", reward:30000, cond:s=>WORLD2_ITEMS.every(i=>s.items[i.id])},
+  {id:"first_fusion", name:"Primera Fusión",       icon:"🔮", desc:"Completa tu primera fusión.", reward:100, cond:s=>(s.stats.fusionsCompleted||0)>=1},
+  {id:"fusion_master",name:"Maestro Fusionador",   icon:"⚗️", desc:"Completa 25 fusiones.", reward:3000, cond:s=>(s.stats.fusionsCompleted||0)>=25},
 ];
 
 function roomComplete(state, roomIdx){
@@ -1069,7 +1202,7 @@ const DEFAULT_STATE = {
   stats:{
     totalRolls:0, paidRolls:0, coinsEarnedTotal:0, coinsSpentTotal:0,
     playTimeSeconds:0, highestRarity:-1, mostValuableItemId:null,
-    bestCommonStreak:0, currentCommonStreak:0, pityCounter:0, secretCounter:0, divineCounter:0,
+    bestCommonStreak:0, currentCommonStreak:0, pityCounter:0, secretCounter:0, divineCounter:0, fusionsCompleted:0,
   },
   prestige:{points:0, count:0},
   missions:null,     // se genera perezosamente con ensureDailyMissions()
@@ -1143,6 +1276,15 @@ function sfxBuy(){ tone(500,.1,"triangle",.15); tone(700,.12,"triangle",.12,.06)
 function sfxDig(){ tone(150,.07,"square",.13); tone(90,.09,"triangle",.11,.02); }
 function sfxDigComplete(){ tone(440,.12,"triangle",.14); tone(587,.14,"triangle",.13,.07); tone(740,.2,"triangle",.12,.14); }
 function sfxAchievement(){ tone(660,.15,"triangle",.16); tone(880,.18,"triangle",.14,.1); tone(1100,.22,"triangle",.12,.2); }
+function sfxRebirth(){
+  tone(110,.5,"sawtooth",.1);
+  [220,277,330,440,554,660,880,1108].forEach((f,i)=>tone(f,.5,"triangle",.14,i*.14));
+}
+function sfxFusionStart(){
+  tone(160,.3,"sawtooth",.09);
+  tone(240,.35,"sawtooth",.08,.08);
+  tone(320,.4,"sawtooth",.07,.16);
+}
 function sfxResult(rarity){
   if(rarity<=1){ tone(440,.15,"sine",.15); }
   else if(rarity<=3){ tone(523,.14,"sine",.15); tone(659,.16,"sine",.13,.08); }
@@ -1178,17 +1320,18 @@ function upgradeCost(key){
   if(lv>=u.max) return null;
   return Math.round(u.base*Math.pow(u.growth,lv));
 }
-function prestigeEnergyBonusPct(){ return Math.min(state.prestige.points*1,50); }
+function prestigeEnergyBonusPct(){ return Math.min(state.prestige.points*1.5,75); }
 function rollCost(){ return 0; }
 function maxSlots(){ return 1+state.upgrades.slots; }
-function prestigeIncomeBonus(){ return state.prestige.points*0.03; }
+function prestigeIncomeBonus(){ return state.prestige.points*0.05; }
 function incomeMultiplier(){ return (1+state.upgrades.income*0.08)*(1+prestigeIncomeBonus()); }
 function totalCps(){
   let sum=0;
   state.equipped.forEach(id=>{ const it=ITEM_MAP[id]; if(it) sum+=it.cps; });
   return Math.round(sum*incomeMultiplier()*10)/10;
 }
-function prestigeLuckBonus(){ return state.prestige.points*0.02; }
+function prestigeLuckBonus(){ return state.prestige.points*0.035; }
+function prestigeFusionBonus(){ return Math.min(state.prestige.points*0.02,1); }
 function luckWeight(item){
   let w = 1/item.denom;
   if(item.rarity>=2){
@@ -1288,6 +1431,27 @@ function toast(html){
   el.innerHTML=html;
   c.appendChild(el);
   setTimeout(()=>el.remove(),3900);
+}
+
+/* =========================================================
+   MODAL DE CONFIRMACIÓN (reemplaza confirm() nativo,
+   bloqueado dentro de iframes sandboxed como los Artifacts)
+   ========================================================= */
+function showConfirm(message,onConfirm,onCancel){
+  const overlay=document.getElementById("confirmOverlay");
+  document.getElementById("confirmMessage").textContent=message;
+  overlay.classList.add("show");
+  const okBtn=document.getElementById("confirmOkBtn");
+  const cancelBtn=document.getElementById("confirmCancelBtn");
+  function cleanup(){
+    overlay.classList.remove("show");
+    okBtn.removeEventListener("click",onOk);
+    cancelBtn.removeEventListener("click",onCancelClick);
+  }
+  function onOk(){ cleanup(); if(onConfirm) onConfirm(); }
+  function onCancelClick(){ cleanup(); if(onCancel) onCancel(); }
+  okBtn.addEventListener("click",onOk);
+  cancelBtn.addEventListener("click",onCancelClick);
 }
 
 /* =========================================================
@@ -1534,6 +1698,7 @@ function showResultCard(item,isNew,isEpic,milestone,isPreview){
   if(mbadge){
     if(milestone==="diamond"){ mbadge.textContent="💎 Tirada de Diamante"; mbadge.style.display="inline-block"; mbadge.className="result-milestone-badge diamond"; }
     else if(milestone==="legendary"){ mbadge.textContent="🌟 Tirada Legendaria"; mbadge.style.display="inline-block"; mbadge.className="result-milestone-badge legendary"; }
+    else if(milestone==="fusion"){ mbadge.textContent="🔮 ¡Fusión Completada!"; mbadge.style.display="inline-block"; mbadge.className="result-milestone-badge fusion"; }
     else { mbadge.style.display="none"; }
   }
   const ownedInfo=document.getElementById("resultOwnedInfo");
@@ -1588,6 +1753,7 @@ function updateEquippedBar(){
 
 rollBtn.addEventListener("click",doRoll);
 document.getElementById("digBtn").addEventListener("click",doDig);
+document.getElementById("fusionCraftBtn").addEventListener("click",doFusion);
 document.getElementById("autorollToggleBtn").addEventListener("click",toggleAutoroll);
 
 /* =========================================================
@@ -1828,6 +1994,173 @@ function renderDigPanel(){
 }
 
 /* =========================================================
+   MÁQUINA DE FUSIÓN
+   ========================================================= */
+let fusionSlots=[null,null,null];
+let fusionActiveSlot=null;
+function availableFusionCopies(id){
+  const owned = state.items[id] ? state.items[id].count : 0;
+  const usedElsewhere = fusionSlots.filter(s=>s===id).length;
+  return owned-1-usedElsewhere;
+}
+function onFusionSlotClick(i){
+  if(fusionSlots[i]){
+    fusionSlots[i]=null;
+    fusionActiveSlot=null;
+  } else {
+    fusionActiveSlot = (fusionActiveSlot===i) ? null : i;
+  }
+  renderFusionPanel();
+}
+function fusionAvgRarity(ids){
+  return ids.reduce((s,id)=>s+ITEM_MAP[id].rarity,0)/ids.length;
+}
+function fusionTierWeights(avgRarity){
+  const base=Math.max(0,Math.min(9,Math.round(avgRarity)));
+  const upgrade=Math.min(9,base+1);
+  const spread=Math.max(0.9,1.7-prestigeFusionBonus());
+  const w=[];
+  for(let t=0;t<10;t++){
+    const dist=Math.min(Math.abs(t-base),Math.abs(t-upgrade));
+    w.push(dist===0 ? 1 : Math.exp(-dist*spread));
+  }
+  return w;
+}
+function fusionPool(){
+  const w=currentWorld();
+  return w.rollItems.concat(w.excavationItems);
+}
+function fusionPoolByTier(pool){
+  const byTier={};
+  pool.forEach(it=>{ (byTier[it.rarity]=byTier[it.rarity]||[]).push(it); });
+  return byTier;
+}
+function fusionTierPercents(ids){
+  const pool=fusionPool();
+  const byTier=fusionPoolByTier(pool);
+  const tierW=fusionTierWeights(fusionAvgRarity(ids));
+  const w=tierW.map((v,t)=>byTier[t]?v:0);
+  const total=w.reduce((a,b)=>a+b,0)||1;
+  return w.map(v=>v/total*100);
+}
+function fusionPickResult(ids){
+  const pool=fusionPool();
+  const sdOverride=pitySecretDivineOverride(pool);
+  if(sdOverride) return pickWeighted(sdOverride, sdOverride.map(it=>luckWeight(it)));
+  const byTier=fusionPoolByTier(pool);
+  const tierW=fusionTierWeights(fusionAvgRarity(ids));
+  const tiers=Object.keys(byTier).map(Number);
+  const weights=tiers.map(t=>tierW[t]);
+  const total=weights.reduce((a,b)=>a+b,0);
+  let r=Math.random()*total;
+  let chosenTier=tiers[tiers.length-1];
+  for(let i=0;i<tiers.length;i++){ r-=weights[i]; if(r<=0){ chosenTier=tiers[i]; break; } }
+  const itemsInTier=byTier[chosenTier];
+  return pickWeighted(itemsInTier, itemsInTier.map(it=>luckWeight(it)));
+}
+function renderFusionPanel(){
+  const slotsEl=document.getElementById("fusionSlots");
+  if(!slotsEl) return;
+  slotsEl.innerHTML=fusionSlots.map((id,i)=>{
+    if(!id) return `<div class="fusion-slot ${fusionActiveSlot===i?"active":""}" data-slot="${i}">➕</div>`;
+    const item=ITEM_MAP[id]; const rar=RARITIES[item.rarity];
+    return `<div class="fusion-slot filled" data-slot="${i}" style="border-color:${rar.color};color:${rar.color};" title="${item.name}">${iconMarkup(item)}</div>`;
+  }).join("");
+  slotsEl.querySelectorAll(".fusion-slot").forEach(el=>{
+    el.addEventListener("click",()=>onFusionSlotClick(parseInt(el.dataset.slot,10)));
+  });
+
+  const pickerEl=document.getElementById("fusionPicker");
+  if(fusionActiveSlot!=null){
+    const w=currentWorld();
+    const eligible=w.museumItems.filter(it=>!it.event && state.items[it.id] && availableFusionCopies(it.id)>=1);
+    pickerEl.style.display="grid";
+    pickerEl.innerHTML = eligible.length ? eligible.map(it=>{
+      const rar=RARITIES[it.rarity];
+      return `<div class="item-card discovered" data-pick="${it.id}" style="--ic:${rar.color};--icg:${rar.glow};">
+        <div class="icon">${iconMarkup(it)}</div>
+        <div class="iname">${it.name}</div>
+        <div class="irar" style="color:${rar.color};">${rar.name}</div>
+        <div class="icount">Disponibles: ${availableFusionCopies(it.id)}</div>
+      </div>`;
+    }).join("") : '<p class="subtle">No tienes objetos duplicados disponibles (necesitas al menos 2 copias de un objeto para poder usar una).</p>';
+    pickerEl.querySelectorAll("[data-pick]").forEach(el=>{
+      el.addEventListener("click",()=>{
+        fusionSlots[fusionActiveSlot]=el.dataset.pick;
+        fusionActiveSlot=null;
+        renderFusionPanel();
+      });
+    });
+  } else {
+    pickerEl.style.display="none";
+    pickerEl.innerHTML="";
+  }
+
+  const infoEl=document.getElementById("fusionInfo");
+  const btn=document.getElementById("fusionCraftBtn");
+  const filled=fusionSlots.filter(Boolean);
+  if(filled.length===3){
+    const percents=fusionTierPercents(filled);
+    infoEl.innerHTML = '<div class="fusion-breakdown-title">🔮 Probabilidades del resultado</div>' + RARITIES.map((r,i)=>{
+      const pct=percents[i];
+      const pctText = pct>0 && pct<0.01 ? pct.toFixed(4) : pct.toFixed(2);
+      return `<div class="fusion-tier-row">
+        <span class="fusion-tier-name" style="color:${r.color};">${r.name}</span>
+        <div class="fusion-tier-bar"><div class="fusion-tier-bar-fill" style="width:${Math.min(100,pct)}%;background:${r.color};"></div></div>
+        <span class="fusion-tier-pct">${pctText}%</span>
+      </div>`;
+    }).join("");
+    btn.disabled=false;
+  } else {
+    infoEl.innerHTML='<p class="subtle" style="text-align:center;">Elige 3 objetos (pueden repetirse) para ver las probabilidades del resultado.</p>';
+    btn.disabled=true;
+  }
+}
+function doFusion(){
+  const filled=fusionSlots.filter(Boolean);
+  if(filled.length!==3) return;
+  const ids=[...filled];
+  ids.forEach(id=>{ state.items[id].count--; });
+  state.equipped=state.equipped.filter(id=>!state.items[id]||state.items[id].count>0);
+  updateEquippedBar();
+
+  ensureAudio(); sfxFusionStart();
+  const orbit=document.getElementById("fusionOrbitIcons");
+  orbit.innerHTML=ids.map((id,i)=>`<span class="fusion-orbit-icon" style="--ang:${i*120}deg;">${iconMarkup(ITEM_MAP[id])}</span>`).join("");
+  document.getElementById("fusionVortex").classList.add("show");
+
+  fusionSlots=[null,null,null];
+  fusionActiveSlot=null;
+  renderFusionPanel();
+
+  setTimeout(()=>{
+    const won=fusionPickResult(ids);
+    updatePityCounters(won);
+    document.getElementById("fusionVortex").classList.remove("show");
+    screenShake(true);
+    flashScreen();
+    burstParticles(won.rarity,{count:100});
+    sfxResult(won.rarity);
+    const isNew=!state.items[won.id];
+    if(!state.items[won.id]) state.items[won.id]={count:0,firstAt:Date.now()};
+    state.items[won.id].count++;
+    state.stats.fusionsCompleted=(state.stats.fusionsCompleted||0)+1;
+
+    showResultCard(won,isNew,won.rarity>=8,"fusion");
+    updateEquippedBar();
+    renderTop();
+    checkAchievements();
+    checkMissions();
+    renderMuseum();
+    renderCollection();
+    renderStats();
+    renderPityBar();
+    renderPrestige();
+    saveState();
+  },2600);
+}
+
+/* =========================================================
    RENDER: COLLECTION
    ========================================================= */
 function renderCollection(){
@@ -1989,25 +2322,39 @@ function renderMissions(){
    ========================================================= */
 function canPrestige(){ return state.stats.totalRolls>=1 || (state.dig&&state.dig.totalDigs>=1); }
 function prestigeGain(){
-  const g = Math.sqrt(state.stats.totalRolls+(state.dig.totalDigs||0)*3)*1.2 + Object.keys(state.items).length*0.6 + Math.max(0,state.stats.highestRarity)*2;
-  return Math.max(1,Math.floor(g));
+  const g = Math.sqrt(state.stats.totalRolls+(state.dig.totalDigs||0)*3)*1.8 + Object.keys(state.items).length*0.9 + Math.max(0,state.stats.highestRarity)*3;
+  return Math.max(2,Math.floor(g));
 }
 function doPrestige(){
   if(!canPrestige()) return;
   const gain=prestigeGain();
-  const msg=`Vas a Renacer:\n\n· Perderás tus monedas y todas las mejoras de la tienda.\n· Tu pico, tu museo, objetos equipados y logros se conservan.\n\nA cambio, ganarás +${gain} Fragmentos de Legado PERMANENTES.\n\n¿Confirmas el renacimiento?`;
-  if(!confirm(msg)) return;
-  state.prestige.points+=gain;
-  state.prestige.count+=1;
-  state.coins=0;
-  state.upgrades={luck:0,autoroll:0,income:0,slots:0,animSpeed:0};
-  state.stats.coinsSpentTotal=0;
-  state.equipped=state.equipped.slice(0,maxSlots());
-  scheduleAutoroll();
-  ensureAudio(); sfxAchievement();
-  toast(`🌌 ¡Has renacido! +${gain} Fragmentos de Legado`);
-  saveState();
-  fullRender();
+  const msg=`Vas a Renacer:\n\n· Perderás tus monedas y todas las mejoras de la tienda.\n· Tu pico, tu museo, objetos equipados y logros se conservan.\n\nA cambio, ganarás +${gain} Fragmentos de Legado PERMANENTES para siempre.\n\n¿Confirmas el renacimiento?`;
+  showConfirm(msg,()=>{
+    state.prestige.points+=gain;
+    state.prestige.count+=1;
+    state.coins=0;
+    state.upgrades={luck:0,autoroll:0,income:0,slots:0,animSpeed:0};
+    state.stats.coinsSpentTotal=0;
+    state.equipped=state.equipped.slice(0,maxSlots());
+    scheduleAutoroll();
+    saveState();
+    playRebirthAnimation(gain);
+  });
+}
+function playRebirthAnimation(gain){
+  ensureAudio();
+  sfxRebirth();
+  document.getElementById("rebirthGainText").textContent=`+${fmt(gain)} Fragmentos de Legado`;
+  const overlay=document.getElementById("rebirthOverlay");
+  overlay.classList.add("show");
+  screenShake(true);
+  setTimeout(()=>burstParticles(9,{count:130}),150);
+  setTimeout(()=>burstParticles(9,{count:90}),700);
+  setTimeout(()=>{
+    overlay.classList.remove("show");
+    toast(`🌌 ¡Has renacido! +${fmt(gain)} Fragmentos de Legado`);
+    fullRender();
+  },2600);
 }
 function renderPrestige(){
   const panel=document.getElementById("prestigeInfo");
@@ -2216,12 +2563,16 @@ soundToggle.addEventListener("click",()=>{
    RESET
    ========================================================= */
 document.getElementById("resetBtn").addEventListener("click",()=>{
-  if(!confirm("¿Seguro que quieres reiniciar todo tu progreso? Esta acción no se puede deshacer.")) return;
-  if(!confirm("Última confirmación: se borrará tu museo completo. ¿Continuar?")) return;
-  localStorage.removeItem(SAVE_KEY);
-  state=structuredClone(DEFAULT_STATE);
-  recentPullsData=[];
-  fullRender();
+  showConfirm("¿Seguro que quieres reiniciar todo tu progreso? Esta acción no se puede deshacer.",()=>{
+    showConfirm("Última confirmación: se borrará tu museo completo. ¿Continuar?",()=>{
+      localStorage.removeItem(SAVE_KEY);
+      state=structuredClone(DEFAULT_STATE);
+      recentPullsData=[];
+      fusionSlots=[null,null,null];
+      fusionActiveSlot=null;
+      fullRender();
+    });
+  });
 });
 
 /* =========================================================
@@ -2327,6 +2678,7 @@ function fullRender(){
   renderPityBar();
   renderEventBanner();
   renderDigPanel();
+  renderFusionPanel();
   buildReel(currentWorld().rollItems[0]);
   scheduleAutoroll();
   renderAutorollToggle();

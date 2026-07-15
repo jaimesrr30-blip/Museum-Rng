@@ -280,6 +280,8 @@ h2.section-title{
 .fusion-tier-bar-fill{height:100%;transition:width .3s ease;}
 .fusion-tier-pct{width:60px;flex:0 0 60px;text-align:left;color:var(--text-1);font-variant-numeric:tabular-nums;}
 .fusion-breakdown-title{font-weight:800;margin-bottom:12px;text-align:center;}
+.fusion-relic-note{margin-top:14px;padding:10px 14px;border-radius:10px;font-size:.78rem;text-align:center;background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.35);color:#67e8f9;}
+.fusion-relic-note.subtle{background:var(--panel-light);border-color:var(--border);color:var(--text-2);}
 .fusion-craft-btn{display:block;margin:0 auto;padding:16px 46px;font-size:1.15rem;background:linear-gradient(135deg,#a78bfa,#f472b6,#a78bfa);background-size:220% 220%;}
 .fusion-craft-btn:disabled{opacity:.35;filter:grayscale(.5);cursor:not-allowed;animation:none;}
 
@@ -369,6 +371,7 @@ h2.section-title{
 .result-milestone-badge.legendary{background:linear-gradient(90deg,#fb923c,var(--gold));color:#2b1400;box-shadow:0 0 14px -2px rgba(251,146,60,.7);}
 .result-milestone-badge.diamond{background:linear-gradient(90deg,#38bdf8,#a78bfa,#38bdf8);background-size:200% 100%;color:#04102b;box-shadow:0 0 18px -2px rgba(56,189,248,.8);animation:milestoneShimmer 1.6s linear infinite;}
 .result-milestone-badge.fusion{background:linear-gradient(90deg,#a78bfa,#f472b6,#a78bfa);background-size:200% 100%;color:#1a0b2e;box-shadow:0 0 18px -2px rgba(167,139,250,.8);animation:milestoneShimmer 1.6s linear infinite;}
+.result-milestone-badge.relic{background:linear-gradient(90deg,#22d3ee,#fef08a,#22d3ee);background-size:200% 100%;color:#062024;box-shadow:0 0 22px -2px rgba(34,211,238,.9);animation:milestoneShimmer 1.4s linear infinite;}
 @keyframes milestoneShimmer{to{background-position:200% 0;}}
 .result-close{
   margin-top:6px;padding:9px 26px;border-radius:10px;border:1px solid var(--border-strong);
@@ -967,6 +970,32 @@ const ENDER_PEARL_ICON = pixelIconSvg(
   ],
   {1:"#0c332f",2:"#1f6e63",3:"#8ff2df",4:"#eafff9"}
 );
+const POKEBALL_ICON = pixelIconSvg(
+  [
+    [0,1,1,1,1,1,1,0],
+    [1,1,1,1,1,1,1,1],
+    [1,1,1,1,1,1,1,1],
+    [2,2,2,2,2,2,2,2],
+    [3,3,2,4,4,2,3,3],
+    [3,3,3,3,3,3,3,3],
+    [3,3,3,3,3,3,3,3],
+    [0,3,3,3,3,3,3,0],
+  ],
+  {1:"#e3350d",2:"#1a1a1a",3:"#f5f5f5",4:"#dedede"}
+);
+const MARIO_STAR_ICON = pixelIconSvg(
+  [
+    [0,0,0,1,1,0,0,0],
+    [0,0,0,1,1,0,0,0],
+    [0,0,1,1,1,1,0,0],
+    [1,1,1,2,2,1,1,1],
+    [1,1,1,2,2,1,1,1],
+    [0,0,1,1,1,1,0,0],
+    [0,1,0,0,0,0,1,0],
+    [1,0,0,0,0,0,0,1],
+  ],
+  {1:"#ffd23c",2:"#fff6d0"}
+);
 function iconMarkup(item){
   return item.svgIcon ? `<img src="${item.svgIcon}" class="pixel-icon" alt="${item.name}">` : item.icon;
 }
@@ -974,6 +1003,15 @@ function iconMarkup(item){
 const EVENT_ITEMS = [
   {id:"evt_ender_pearl",  name:"Perla de Ender",   icon:"🔮", svgIcon:ENDER_PEARL_ICON, rarity:6, denom:700,  cps:65,  room:5, event:true},
   {id:"evt_geometry_cube",name:"Cubo Saltarín",    icon:"🟧", rarity:8, denom:5000, cps:260, room:5, event:true},
+  {id:"evt_pokeball",     name:"Poké Ball",        icon:"⚪", svgIcon:POKEBALL_ICON, rarity:5, denom:300, cps:35, room:5, event:true},
+  {id:"evt_mario_star",   name:"Estrella Invencible", icon:"⭐", svgIcon:MARIO_STAR_ICON, rarity:9, denom:60000, cps:950, room:5, event:true},
+];
+
+/* --- Reliquias de Fusión: solo se consiguen fusionando --- */
+const FUSION_RELIC_ITEMS = [
+  {id:"relic_void_core",   name:"Núcleo del Vacío",        icon:"🌑", rarity:9, denom:400000, cps:2200, room:7, relic:true},
+  {id:"relic_time_shard",  name:"Fragmento del Tiempo",    icon:"⏳", rarity:9, denom:450000, cps:2400, room:7, relic:true},
+  {id:"relic_phoenix_ash", name:"Ceniza de Fénix Eterna",  icon:"🔥", rarity:9, denom:500000, cps:2600, room:7, relic:true},
 ];
 const EXCAVATION_ITEMS = [
   {id:"bolsa_monedas", name:"Bolsa de Monedas Antiguas", icon:"💰", rarity:0, denom:2,  cps:3,  room:6, dig:true},
@@ -1015,7 +1053,7 @@ const WORLD2_ROOMS = [
   {name:"Trono Helado",     icon:"❄️"},
 ];
 
-const ALL_ITEMS = ITEMS.concat(EVENT_ITEMS).concat(EXCAVATION_ITEMS).concat(WORLD2_ITEMS);
+const ALL_ITEMS = ITEMS.concat(EVENT_ITEMS).concat(EXCAVATION_ITEMS).concat(WORLD2_ITEMS).concat(FUSION_RELIC_ITEMS);
 const ITEM_MAP = Object.fromEntries(ALL_ITEMS.map(it=>[it.id,it]));
 
 const ROOMS = [
@@ -1026,6 +1064,7 @@ const ROOMS = [
   {name:"Cámara Secreta",          icon:"🔒"},
   {name:"Sala de Eventos",         icon:"🎪"},
   {name:"Sala de Excavación",      icon:"⛏️"},
+  {name:"Cámara de Reliquias",     icon:"💠"},
 ];
 
 const WORLD_DATA = [
@@ -1033,7 +1072,7 @@ const WORLD_DATA = [
     id:0, name:"Bosque Ancestral", icon:"🌲", theme:"forest",
     desc:"El museo original, escondido entre los árboles de un bosque milenario.",
     rollItems:ITEMS, excavationItems:EXCAVATION_ITEMS,
-    museumItems:ITEMS.concat(EVENT_ITEMS).concat(EXCAVATION_ITEMS), rooms:ROOMS,
+    museumItems:ITEMS.concat(EVENT_ITEMS).concat(EXCAVATION_ITEMS).concat(FUSION_RELIC_ITEMS), rooms:ROOMS,
   },
   {
     id:1, name:"Reino de Hielo", icon:"❄️", theme:"ice",
@@ -1139,6 +1178,8 @@ const ACHIEVEMENTS = [
   {id:"world2_full",  name:"Emperador del Hielo",  icon:"🐉", desc:"Descubre los 20 objetos del Reino de Hielo.", reward:30000, cond:s=>WORLD2_ITEMS.every(i=>s.items[i.id])},
   {id:"first_fusion", name:"Primera Fusión",       icon:"🔮", desc:"Completa tu primera fusión.", reward:100, cond:s=>(s.stats.fusionsCompleted||0)>=1},
   {id:"fusion_master",name:"Maestro Fusionador",   icon:"⚗️", desc:"Completa 25 fusiones.", reward:3000, cond:s=>(s.stats.fusionsCompleted||0)>=25},
+  {id:"relic_hunter", name:"Cazador de Reliquias",  icon:"💠", desc:"Consigue tu primera Reliquia de Fusión.", reward:2000, cond:s=>FUSION_RELIC_ITEMS.some(i=>s.items[i.id])},
+  {id:"relic_complete",name:"Guardián de las Reliquias", icon:"👑", desc:"Consigue las 3 Reliquias de Fusión.", reward:50000, cond:s=>FUSION_RELIC_ITEMS.every(i=>s.items[i.id])},
 ];
 
 function roomComplete(state, roomIdx){
@@ -1385,6 +1426,7 @@ function poolForProbability(item){
   return item && item.event ? ITEMS.concat(EVENT_ITEMS) : ITEMS;
 }
 function normalizedProbPercent(item){
+  if(item && item.relic) return null;
   const pool = poolForProbability(item);
   const weights = pool.map(it=>luckWeight(it));
   const total = weights.reduce((a,b)=>a+b,0);
@@ -1699,6 +1741,7 @@ function showResultCard(item,isNew,isEpic,milestone,isPreview){
     if(milestone==="diamond"){ mbadge.textContent="💎 Tirada de Diamante"; mbadge.style.display="inline-block"; mbadge.className="result-milestone-badge diamond"; }
     else if(milestone==="legendary"){ mbadge.textContent="🌟 Tirada Legendaria"; mbadge.style.display="inline-block"; mbadge.className="result-milestone-badge legendary"; }
     else if(milestone==="fusion"){ mbadge.textContent="🔮 ¡Fusión Completada!"; mbadge.style.display="inline-block"; mbadge.className="result-milestone-badge fusion"; }
+    else if(milestone==="relic"){ mbadge.textContent="💠 ¡Reliquia de Fusión!"; mbadge.style.display="inline-block"; mbadge.className="result-milestone-badge relic"; }
     else { mbadge.style.display="none"; }
   }
   const ownedInfo=document.getElementById("resultOwnedInfo");
@@ -1791,19 +1834,20 @@ function itemCardHtml(item,activeEvt,theme){
   const isEq=state.equipped.includes(item.id);
   const isActiveEvt = item.event && activeEvt && item.id===activeEvt.id;
   const evtBadge = item.event ? `<div class="badge-evt">${isActiveEvt?"🎪 ACTIVO":"🎪"}</div>` : "";
+  const relicBadge = item.relic ? `<div class="badge-evt">💠 FUSIÓN</div>` : "";
   const themeBadge = `<div class="badge-theme">${theme==="ice"?"❄️":"🍃"}</div>`;
   if(!owned){
     return `<div class="item-card locked" data-rarity="${item.rarity}" style="--ic:${rar.color};--icg:${rar.glow};">
-      ${evtBadge}
+      ${evtBadge}${relicBadge}
       <div class="icon">❔</div>
       <div class="iname">???</div>
       <div class="irar" style="color:var(--text-2);">${rar.name}</div>
-      <div class="icount">${item.event?(isActiveEvt?"¡Evento activo!":"Muy raro ahora"):fmtDenom(item.denom)}</div>
+      <div class="icount">${item.relic?"Solo por Fusión":item.event?(isActiveEvt?"¡Evento activo!":"Muy raro ahora"):fmtDenom(item.denom)}</div>
     </div>`;
   }
   return `<div class="item-card discovered ${isEq?"equipped":""}" data-id="${item.id}" data-rarity="${item.rarity}" style="--ic:${rar.color};--icg:${rar.glow};">
-    ${isEq?'<div class="badge-eq">⭐</div>':evtBadge}
-    ${!isEq&&!item.event?themeBadge:""}
+    ${isEq?'<div class="badge-eq">⭐</div>':(evtBadge||relicBadge)}
+    ${!isEq&&!item.event&&!item.relic?themeBadge:""}
     <div class="icon">${iconMarkup(item)}</div>
     <div class="iname">${item.name}</div>
     <div class="irar" style="color:${rar.color};">${rar.name}</div>
@@ -2043,10 +2087,16 @@ function fusionTierPercents(ids){
   const total=w.reduce((a,b)=>a+b,0)||1;
   return w.map(v=>v/total*100);
 }
+function fusionRelicChance(ids){
+  const avg=fusionAvgRarity(ids);
+  if(avg<6) return 0;
+  return Math.min(0.35, (avg-5)*0.09 + prestigeFusionBonus()*0.05);
+}
 function fusionPickResult(ids){
   const pool=fusionPool();
   const sdOverride=pitySecretDivineOverride(pool);
   if(sdOverride) return pickWeighted(sdOverride, sdOverride.map(it=>luckWeight(it)));
+  if(Math.random()<fusionRelicChance(ids)) return FUSION_RELIC_ITEMS[Math.floor(Math.random()*FUSION_RELIC_ITEMS.length)];
   const byTier=fusionPoolByTier(pool);
   const tierW=fusionTierWeights(fusionAvgRarity(ids));
   const tiers=Object.keys(byTier).map(Number);
@@ -2101,6 +2151,10 @@ function renderFusionPanel(){
   const filled=fusionSlots.filter(Boolean);
   if(filled.length===3){
     const percents=fusionTierPercents(filled);
+    const relicChance=fusionRelicChance(filled)*100;
+    const relicNote = relicChance>0
+      ? `<div class="fusion-relic-note">💠 ${relicChance.toFixed(2)}% de probabilidad extra de obtener una <b>Reliquia de Fusión</b> exclusiva (solo se consiguen así)</div>`
+      : `<div class="fusion-relic-note subtle">💠 Usa objetos de rareza Omega o superior para tener opción a una Reliquia de Fusión exclusiva</div>`;
     infoEl.innerHTML = '<div class="fusion-breakdown-title">🔮 Probabilidades del resultado</div>' + RARITIES.map((r,i)=>{
       const pct=percents[i];
       const pctText = pct>0 && pct<0.01 ? pct.toFixed(4) : pct.toFixed(2);
@@ -2109,7 +2163,7 @@ function renderFusionPanel(){
         <div class="fusion-tier-bar"><div class="fusion-tier-bar-fill" style="width:${Math.min(100,pct)}%;background:${r.color};"></div></div>
         <span class="fusion-tier-pct">${pctText}%</span>
       </div>`;
-    }).join("");
+    }).join("") + relicNote;
     btn.disabled=false;
   } else {
     infoEl.innerHTML='<p class="subtle" style="text-align:center;">Elige 3 objetos (pueden repetirse) para ver las probabilidades del resultado.</p>';
@@ -2146,7 +2200,7 @@ function doFusion(){
     state.items[won.id].count++;
     state.stats.fusionsCompleted=(state.stats.fusionsCompleted||0)+1;
 
-    showResultCard(won,isNew,won.rarity>=8,"fusion");
+    showResultCard(won,isNew,won.rarity>=8,won.relic?"relic":"fusion");
     updateEquippedBar();
     renderTop();
     checkAchievements();
@@ -2170,19 +2224,19 @@ function renderCollection(){
     const owned=state.items[item.id];
     const rar=RARITIES[item.rarity];
     const prob = normalizedProbPercent(item);
-    const tag = item.event ? ` <span class="subtle">🎪${item.id===activeEvt.id?" activo":" raro ahora"}</span>` : "";
+    const tag = item.relic ? ` <span class="subtle">💠 solo por fusión</span>` : (item.event ? ` <span class="subtle">🎪${item.id===activeEvt.id?" activo":" raro ahora"}</span>` : "");
     if(!owned){
       return `<tr style="opacity:.55;">
         <td>❔</td><td>???${tag}</td>
         <td><span class="rar-pill" style="background:${rar.glow};color:#0a0a12;box-shadow:0 0 10px ${rar.glow};">${rar.name}</span></td>
-        <td>${fmtDenom(item.denom)}</td><td>-</td><td>0</td><td>-</td>
+        <td>${item.relic?"-":fmtDenom(item.denom)}</td><td>-</td><td>0</td><td>-</td>
       </tr>`;
     }
     return `<tr class="coll-row" data-id="${item.id}" title="Ver en grande">
       <td style="font-size:1.3rem;">${iconMarkup(item)}</td>
       <td><b>${item.name}</b>${tag}</td>
       <td><span class="rar-pill" style="background:${rar.glow};color:#0a0a12;">${rar.name}</span></td>
-      <td>${fmtDenom(item.denom)} <span class="subtle">(${prob.toFixed(prob<0.01?4:2)}%)</span></td>
+      <td>${item.relic?"Solo por Fusión":`${fmtDenom(item.denom)} <span class="subtle">(${prob.toFixed(prob<0.01?4:2)}%)</span>`}</td>
       <td>+${fmt(item.cps)}/s</td>
       <td>${owned.count}</td>
       <td>${fmtDate(owned.firstAt)}</td>
@@ -2231,12 +2285,15 @@ function renderStats(){
   const grid=document.getElementById("statGrid");
   const discovered=Object.keys(state.items).length;
   const eventDiscovered=EVENT_ITEMS.filter(i=>state.items[i.id]).length;
+  const relicDiscovered=FUSION_RELIC_ITEMS.filter(i=>state.items[i.id]).length;
   const mostVal = state.stats.mostValuableItemId ? ITEM_MAP[state.stats.mostValuableItemId] : null;
   const highestRar = state.stats.highestRarity>=0 ? RARITIES[state.stats.highestRarity].name : "-";
   const cards=[
     ["🎲 Tiradas realizadas", fmt(state.stats.totalRolls)],
     ["🏺 Objetos descubiertos", `${discovered}/${ITEMS.length}`],
     ["🎪 Objetos de evento", `${eventDiscovered}/${EVENT_ITEMS.length}`],
+    ["💠 Reliquias de Fusión", `${relicDiscovered}/${FUSION_RELIC_ITEMS.length}`],
+    ["⚗️ Fusiones completadas", fmt(state.stats.fusionsCompleted||0)],
     ["✨ Rareza más alta", highestRar],
     ["💰 Monedas generadas", fmt(state.stats.coinsEarnedTotal)],
     ["🛍️ Monedas gastadas", fmt(state.stats.coinsSpentTotal)],
